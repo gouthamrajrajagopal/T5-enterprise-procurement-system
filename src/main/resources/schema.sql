@@ -344,3 +344,25 @@ CREATE TABLE IF NOT EXISTS invoices (
     FOREIGN KEY (po_id)
         REFERENCES purchase_orders(po_id)
 );
+
+INSERT IGNORE INTO roles
+(role_id, role_name, description)
+VALUES
+(1, 'EMPLOYEE', 'Creates purchase requisitions'),
+(2, 'MANAGER', 'Approves or rejects requests'),
+(3, 'FINANCE', 'Handles budget, invoices and payment'),
+(4, 'ADMIN', 'Manages users and master data'),
+(5, 'OWNER', 'Approves high quantity requests'),
+(6, 'VENDOR', 'Receives purchase orders and updates delivery');
+
+
+
+       INSERT IGNORE INTO roles
+(role_id, role_name, description)
+VALUES
+(1, 'EMPLOYEE', 'Creates purchase requisitions'),
+(2, 'MANAGER', 'Approves or rejects requests'),
+(3, 'FINANCE', 'Handles budget, invoices and payments'),
+(4, 'ADMIN', 'Manages master data and users'),
+(5, 'OWNER', 'Approves high quantity requests'),
+(6, 'VENDOR', 'Receives purchase orders and updates delivery');
