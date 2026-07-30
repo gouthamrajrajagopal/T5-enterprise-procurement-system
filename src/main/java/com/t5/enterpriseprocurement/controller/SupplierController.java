@@ -4,12 +4,13 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.service.SupplierService;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
 @RequestMapping("/suppliers")
+@CrossOrigin(origins = "http://localhost:5173")
 public class SupplierController {
 
     @Autowired
