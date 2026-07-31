@@ -164,13 +164,13 @@ function SupplierCompliance() {
             width: 80,
         },
 
-        {
-            field: "supplier",
-            headerName: "Supplier",
-            width: 220,
-            valueGetter: (params) =>
-                params.row.supplier?.supplierName || "",
-        },
+		{
+		    field: "supplier",
+		    headerName: "Supplier",
+		    width: 220,
+		    renderCell: (params) =>
+		        params.row?.supplier?.supplierName || "",
+		},
 
         {
             field: "gstVerified",
