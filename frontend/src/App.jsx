@@ -1,5 +1,7 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import Dashboard from "./pages/Dashboard";
 import Supplier from "./pages/Supplier";
@@ -9,33 +11,43 @@ import ApprovalHierarchy from "./pages/ApprovalHierarchy";
 import SupplierCompliance from "./pages/SupplierCompliance";
 
 function App() {
-  return (
-      <BrowserRouter>
 
-        <Routes>
+    return (
 
-          <Route path="/" element={<Dashboard />} />
+        <BrowserRouter>
 
-          <Route path="/suppliers" element={<Supplier />} />
+            <Routes>
 
-          <Route path="/departments" element={<Department />} />
+                <Route path="/" element={<Login />} />
 
-          <Route path="/categories" element={<Category />} />
+                <Route path="/login" element={<Login />} />
 
-          <Route
-              path="/approval-hierarchy"
-              element={<ApprovalHierarchy />}
-          />
+                <Route path="/register" element={<Register />} />
 
-          <Route
-              path="/supplier-compliance"
-              element={<SupplierCompliance />}
-          />
+                <Route path="/dashboard" element={<Dashboard />} />
 
-        </Routes>
+                <Route path="/suppliers" element={<Supplier />} />
 
-      </BrowserRouter>
-  );
+                <Route path="/departments" element={<Department />} />
+
+                <Route path="/categories" element={<Category />} />
+
+                <Route
+                    path="/approval-hierarchy"
+                    element={<ApprovalHierarchy />}
+                />
+
+                <Route
+                    path="/supplier-compliance"
+                    element={<SupplierCompliance />}
+                />
+
+            </Routes>
+
+        </BrowserRouter>
+
+    );
+
 }
 
 export default App;
