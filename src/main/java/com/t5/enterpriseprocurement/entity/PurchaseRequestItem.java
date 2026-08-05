@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +16,7 @@ public class PurchaseRequestItem {
     @Column(name = "item_id")
     private Integer itemId;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "request_id", nullable = false)
     @JsonBackReference
