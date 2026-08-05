@@ -21,6 +21,13 @@ public interface PurchaseRequestService {
             Integer requestId,
             CreatePurchaseRequestDTO request
     );
+    
+    
+    
+    PurchaseRequest selectSupplier(
+            Integer requestId,
+            Integer supplierId
+    );
 
     void cancelRequest(Integer requestId);
 }

@@ -72,6 +72,17 @@ public class PurchaseRequestController {
         return purchaseRequestService
                 .updateRequest(requestId, request);
     }
+    
+    @PutMapping("/{requestId}/select-supplier/{supplierId}")
+    public PurchaseRequest selectSupplier(
+            @PathVariable Integer requestId,
+            @PathVariable Integer supplierId) {
+
+        return purchaseRequestService.selectSupplier(
+                requestId,
+                supplierId
+        );
+    }
 
     @DeleteMapping("/{requestId}")
     public ResponseEntity<String> cancelRequest(

@@ -88,10 +88,10 @@ public class PurchaseOrderServiceImpl
                 .getRoleName();
 
         if (!"ADMIN".equalsIgnoreCase(role)
-                && !"FINANCE".equalsIgnoreCase(role)) {
+                && !"MANAGER".equalsIgnoreCase(role)) {
 
             throw new RuntimeException(
-                    "Only ADMIN or FINANCE can "
+                    "Only ADMIN or Manager can "
                             + "generate a purchase order"
             );
         }

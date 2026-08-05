@@ -13,11 +13,13 @@ import com.t5.enterpriseprocurement.entity.Category;
 import com.t5.enterpriseprocurement.entity.Department;
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
 import com.t5.enterpriseprocurement.entity.PurchaseRequestItem;
+import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.entity.User;
 import com.t5.enterpriseprocurement.enums.PurchaseRequestStatus;
 import com.t5.enterpriseprocurement.repository.CategoryRepository;
 import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
+import com.t5.enterpriseprocurement.repository.SupplierRepository;
 import com.t5.enterpriseprocurement.repository.UserRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestService;
 
@@ -38,17 +40,20 @@ public class PurchaseRequestServiceImpl
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
 
     public PurchaseRequestServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
             UserRepository userRepository,
             DepartmentRepository departmentRepository,
-            CategoryRepository categoryRepository) {
+            CategoryRepository categoryRepository,
+            SupplierRepository supplierRepository) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.categoryRepository = categoryRepository;
+        this.supplierRepository = supplierRepository;
     }
 
     @Override
@@ -275,6 +280,36 @@ public class PurchaseRequestServiceImpl
 
         return purchaseRequestRepository.save(existing);
     }
+    
+    @Override
+    @Transactional
+    public PurchaseRequest selectSupplier(
+            Integer requestId,
+            Integer supplierId) {
+
+        PurchaseRequest purchaseRequest =
+                getRequestById(requestId);
+
+        Supplier supplier = supplierRepository
+                .findById(supplierId)
+                .orElseThrow(() ->
+                        new RuntimeException("Supplier not found"));
+
+        if (purchaseRequest.getStatus()
+                != PurchaseRequestStatus.VENDOR_SELECTION_PENDING) {
+
+            throw new RuntimeException(
+                    "Supplier can only be selected for requests awaiting vendor selection");
+        }
+
+        purchaseRequest.setSelectedSupplier(supplier);
+
+        purchaseRequest.setStatus(
+                PurchaseRequestStatus.VENDOR_SELECTED);
+
+        return purchaseRequestRepository.save(purchaseRequest);
+    }
+ 
 
     @Override
     public void cancelRequest(Integer requestId) {
