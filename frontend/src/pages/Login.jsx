@@ -1,14 +1,17 @@
-    import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import {
+    Alert,
     Box,
-    Paper,
-    Typography,
-    TextField,
     Button,
-    InputAdornment,
     IconButton,
+    InputAdornment,
+    Paper,
+    TextField,
+    Typography,
 } from "@mui/material";
+
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
@@ -21,41 +24,112 @@ import { loginUser } from "../api/authApi";
 
 function Login() {
     const navigate = useNavigate();
+
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
     const [login, setLogin] = useState({
         email: "",
         password: "",
     });
-    const handleChange = (e) => {
-    setLogin((previous) => ({
-        ...previous,
-        [e.target.name]: e.target.value,
-    }));
-};
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setLogin((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+
+        setError("");
+    };
+
+    const handleLogin = async (event) => {
+        event.preventDefault();
+
+        const email = String(login.email || "").trim();
+        const password = String(login.password || "");
+
+        if (!email) {
+            setError("Email is required");
+            return;
+        }
+
+        if (!password) {
+            setError("Password is required");
+            return;
+        }
+
         setLoading(true);
+        setError("");
+
         try {
-            const response = await loginUser(login);
-            const data = response?.data;
-            if (!data?.token) throw new Error("Login token missing");
+            const data = await loginUser({
+                email,
+                password,
+            });
+
+            if (!data?.token) {
+                throw new Error(
+                    "Token was not returned by the server"
+                );
+            }
+
+            const role = String(data.role || "")
+                .trim()
+                .toUpperCase();
+
             localStorage.setItem("token", data.token);
-            localStorage.setItem("userId", String(data.userId ?? ""));
-            localStorage.setItem("role", data.role ?? "");
-            localStorage.setItem("name", data.name || data.username || login.email.split("@")[0]);
-            localStorage.setItem("email", login.email);
-            const routes = {
+            localStorage.setItem(
+                "userId",
+                String(data.userId ?? "")
+            );
+            localStorage.setItem(
+                "name",
+                data.name || email.split("@")[0]
+            );
+            localStorage.setItem("role", role);
+            localStorage.setItem("email", email);
+
+            const roleRoutes = {
                 EMPLOYEE: "/employee/dashboard",
                 MANAGER: "/manager/dashboard",
                 FINANCE: "/finance/dashboard",
+                DIRECTOR: "/director/dashboard",
+                OWNER: "/owner/dashboard",
                 PROCUREMENT_HEAD: "/procurement/dashboard",
                 ADMIN: "/admin/dashboard",
             };
-            navigate(routes[data.role] || "/login");
-        } catch (error) {
-            alert(error.response?.data?.message || "Invalid email or password");
+
+            const destination = roleRoutes[role];
+
+            if (!destination) {
+                localStorage.clear();
+                setError(
+                    `No dashboard is configured for role: ${
+                        role || "UNKNOWN"
+                    }`
+                );
+                return;
+            }
+
+            navigate(destination, {
+                replace: true,
+            });
+        } catch (loginError) {
+            console.error(
+                "Login error:",
+                loginError.response?.status,
+                loginError.response?.data
+            );
+
+            setError(
+                loginError.response?.data?.message ||
+                    loginError.response?.data?.error ||
+                    loginError.message ||
+                    "Invalid email or password"
+            );
         } finally {
             setLoading(false);
         }
@@ -65,166 +139,288 @@ function Login() {
         <Box
             sx={{
                 minHeight: "100vh",
-                width: "100vw",
+                width: "100%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 position: "relative",
                 overflow: "hidden",
                 backgroundColor: "var(--bg-primary)",
+                px: 2,
+                boxSizing: "border-box",
             }}
         >
-            {/* Ambient Background Lights */}
             <div className="bg-ambient-mesh">
                 <div className="bg-orb bg-orb-1" />
                 <div className="bg-orb bg-orb-2" />
                 <div className="bg-orb bg-orb-3" />
             </div>
 
-            {/* Split Screen Container */}
             <Paper
                 className="glass-panel"
                 sx={{
-                    width: { xs: "90%", sm: "80%", md: "900px" },
+                    width: {
+                        xs: "100%",
+                        sm: "90%",
+                        md: "900px",
+                    },
+                    maxWidth: "900px",
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1.1fr 1fr" },
+                    gridTemplateColumns: {
+                        xs: "1fr",
+                        md: "1.1fr 1fr",
+                    },
                     borderRadius: "24px",
                     overflow: "hidden",
-                    border: "1px solid var(--border-light)",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                    border:
+                        "1px solid var(--border-light)",
+                    boxShadow:
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
                     zIndex: 1,
                 }}
             >
-                {/* Left Enterprise Branding Panel */}
                 <Box
                     sx={{
-                        background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(217, 70, 239, 0.15) 100%)",
-                        p: { xs: 4, md: 6 },
-                        display: "flex",
+                        background:
+                            "linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(217, 70, 239, 0.15) 100%)",
+                        p: {
+                            xs: 4,
+                            md: 6,
+                        },
+                        display: {
+                            xs: "none",
+                            md: "flex",
+                        },
                         flexDirection: "column",
                         justifyContent: "space-between",
-                        borderRight: { md: "1px solid var(--border-subtle)" },
+                        borderRight:
+                            "1px solid var(--border-subtle)",
                     }}
                 >
-                    <Box display="flex" alignItems="center" gap={1.5}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                        }}
+                    >
                         <Box
                             sx={{
                                 width: 42,
                                 height: 42,
                                 borderRadius: "12px",
-                                background: "var(--gradient-primary)",
+                                background:
+                                    "var(--gradient-primary)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                boxShadow: "0 0 20px rgba(99, 102, 241, 0.4)",
+                                boxShadow:
+                                    "0 0 20px rgba(99, 102, 241, 0.4)",
                             }}
                         >
-                            <AutoAwesomeIcon sx={{ color: "#fff" }} />
+                            <AutoAwesomeIcon
+                                sx={{ color: "#fff" }}
+                            />
                         </Box>
-                        <Typography variant="h6" fontWeight="bold" letterSpacing="-0.5px">
-                            Procure<span className="gradient-text">X</span> Enterprise
+
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 700,
+                                letterSpacing: "-0.5px",
+                            }}
+                        >
+                            Procure
+                            <span className="gradient-text">
+                                X
+                            </span>{" "}
+                            Enterprise
                         </Typography>
                     </Box>
 
-                    <Box my={4}>
-                        <Typography variant="h3" fontWeight="800" lineHeight={1.2} mb={2}>
+                    <Box sx={{ my: 4 }}>
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                fontWeight: 800,
+                                lineHeight: 1.2,
+                                mb: 2,
+                            }}
+                        >
                             Next-Gen <br />
-                            <span className="gradient-text">Procurement</span> System
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mb={3}>
-                            Automate vendor onboarding, compliance tracking, purchase order approvals, and invoice routing with real-time audit trails.
+
+                            <span className="gradient-text">
+                                Procurement
+                            </span>{" "}
+                            System
                         </Typography>
 
-                        <Box display="flex" flexDirection="column" gap={1.5}>
-                            <Box display="flex" alignItems="center" gap={1.5}>
-                                <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="600" color="text.primary">
-                                    Instant Vendor Compliance & Tax Audits
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center" gap={1.5}>
-                                <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="600" color="text.primary">
-                                    Multi-Level Managerial Sign-off Workflows
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center" gap={1.5}>
-                                <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="600" color="text.primary">
-                                    End-to-End Requisition to Goods Receipt
-                                </Typography>
-                            </Box>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mb: 3 }}
+                        >
+                            Automate vendor onboarding,
+                            compliance tracking, purchase order
+                            approvals and invoice routing with
+                            real-time audit trails.
+                        </Typography>
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 1.5,
+                            }}
+                        >
+                            <FeatureItem text="Instant Vendor Compliance & Tax Audits" />
+
+                            <FeatureItem text="Multi-Level Managerial Sign-off Workflows" />
+
+                            <FeatureItem text="End-to-End Requisition to Goods Receipt" />
                         </Box>
                     </Box>
 
-                    <Typography variant="caption" color="text.muted">
-                        © 2026 ProcureX Enterprise Ltd. All Rights Reserved.
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                    >
+                        © 2026 ProcureX Enterprise Ltd. All
+                        Rights Reserved.
                     </Typography>
                 </Box>
 
-                {/* Right Form Panel */}
                 <Box
                     sx={{
-                        p: { xs: 4, md: 5 },
+                        p: {
+                            xs: 4,
+                            md: 5,
+                        },
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
                     }}
                 >
-                    <Box mb={3}>
-                        <Typography variant="h4" fontWeight="bold" mb={0.5}>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography
+                            variant="h4"
+                            sx={{
+                                fontWeight: 700,
+                                mb: 0.5,
+                            }}
+                        >
                             Welcome Back
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Sign in to access your procurement dashboard
+
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                        >
+                            Sign in to access your procurement
+                            dashboard
                         </Typography>
                     </Box>
 
-                    <form onSubmit={handleLogin}>
+                    {error && (
+                        <Alert
+                            severity="error"
+                            sx={{ mb: 2 }}
+                        >
+                            {error}
+                        </Alert>
+                    )}
+
+                    <Box
+                        component="form"
+                        onSubmit={handleLogin}
+                        noValidate
+                    >
                         <TextField
                             fullWidth
+                            required
                             label="Corporate Email"
                             name="email"
                             type="email"
                             value={login.email}
                             onChange={handleChange}
                             margin="normal"
-                            placeholder="admin@enterprise.com"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <EmailIcon fontSize="small" sx={{ color: "var(--text-muted)" }} />
-                                    </InputAdornment>
-                                ),
+                            placeholder="madhukar@gmail.com"
+                            disabled={loading}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <EmailIcon
+                                                fontSize="small"
+                                                sx={{
+                                                    color:
+                                                        "text.secondary",
+                                                }}
+                                            />
+                                        </InputAdornment>
+                                    ),
+                                },
                             }}
                         />
 
                         <TextField
                             fullWidth
+                            required
                             label="Password"
                             name="password"
-                            type={showPassword ? "text" : "password"}
+                            type={
+                                showPassword
+                                    ? "text"
+                                    : "password"
+                            }
                             value={login.password}
                             onChange={handleChange}
                             margin="normal"
                             placeholder="••••••••"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <LockIcon fontSize="small" sx={{ color: "var(--text-muted)" }} />
-                                    </InputAdornment>
-                                ),
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                            size="small"
-                                        >
-                                            {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
+                            disabled={loading}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LockIcon
+                                                fontSize="small"
+                                                sx={{
+                                                    color:
+                                                        "text.secondary",
+                                                }}
+                                            />
+                                        </InputAdornment>
+                                    ),
+
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                type="button"
+                                                aria-label={
+                                                    showPassword
+                                                        ? "Hide password"
+                                                        : "Show password"
+                                                }
+                                                onClick={() =>
+                                                    setShowPassword(
+                                                        (
+                                                            previous
+                                                        ) =>
+                                                            !previous
+                                                    )
+                                                }
+                                                edge="end"
+                                                size="small"
+                                            >
+                                                {showPassword ? (
+                                                    <VisibilityOffIcon fontSize="small" />
+                                                ) : (
+                                                    <VisibilityIcon fontSize="small" />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
                             }}
                         />
 
@@ -238,17 +434,25 @@ function Login() {
                             sx={{
                                 mt: 3,
                                 py: 1.5,
-                                background: "var(--gradient-primary)",
+                                background:
+                                    "var(--gradient-primary)",
                                 fontSize: "0.95rem",
                                 fontWeight: 700,
                             }}
                         >
-                            {loading ? "Authenticating..." : "Sign In to Portal"}
+                            {loading
+                                ? "Authenticating..."
+                                : "Sign In to Portal"}
                         </Button>
-                    </form>
+                    </Box>
 
-                    <Typography align="center" variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-                        Don't have an account?{" "}
+                    <Typography
+                        align="center"
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 3 }}
+                    >
+                        Don&apos;t have an account?{" "}
                         <Link
                             to="/register"
                             style={{
@@ -262,6 +466,33 @@ function Login() {
                     </Typography>
                 </Box>
             </Paper>
+        </Box>
+    );
+}
+
+function FeatureItem({ text }) {
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+            }}
+        >
+            <CheckCircleIcon
+                sx={{
+                    color: "#10b981",
+                    fontSize: 20,
+                }}
+            />
+
+            <Typography
+                variant="caption"
+                color="text.primary"
+                sx={{ fontWeight: 600 }}
+            >
+                {text}
+            </Typography>
         </Box>
     );
 }
