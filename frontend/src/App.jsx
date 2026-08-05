@@ -10,6 +10,11 @@ import Category from "./pages/Category";
 import ApprovalHierarchy from "./pages/ApprovalHierarchy";
 import SupplierCompliance from "./pages/SupplierCompliance";
 
+import PurchaseRequest from "./pages/PurchaseRequest";
+import VendorSelection from "./pages/VendorSelection";
+import PurchaseOrder from "./pages/PurchaseOrder";
+import GoodsReceipt from "./pages/GoodsReceipt";
+
 function App() {
 
     return (
@@ -40,6 +45,26 @@ function App() {
                 <Route
                     path="/supplier-compliance"
                     element={<SupplierCompliance />}
+                />
+
+                <Route
+                    path="/purchase-request"
+                    element={<PurchaseRequest />}
+                />
+
+                <Route
+                    path="/vendor-selection"
+                    element={<VendorSelection />}
+                />
+
+                <Route
+                    path="/purchase-order"
+                    element={<PurchaseOrder />}
+                />
+
+                <Route
+                    path="/goods-receipt"
+                    element={<GoodsReceipt />}
                 />
 
             </Routes>
