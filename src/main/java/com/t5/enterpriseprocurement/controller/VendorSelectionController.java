@@ -41,4 +41,11 @@ public class VendorSelectionController {
         return vendorSelectionService
                 .selectVendor(requestId, selection);
     }
+    @GetMapping("/processed")
+    public List<PurchaseRequest>
+    getProcessedVendorSelections() {
+
+        return vendorSelectionService
+                .getProcessedVendorSelections();
+    }
 }

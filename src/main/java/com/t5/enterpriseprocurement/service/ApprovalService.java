@@ -8,6 +8,7 @@ import com.t5.enterpriseprocurement.entity.PurchaseRequest;
 
 public interface ApprovalService {
 
+    // Manager
     List<PurchaseRequest> getManagerPendingRequests();
 
     PurchaseRequest managerApprove(
@@ -20,18 +21,7 @@ public interface ApprovalService {
             ApprovalActionDTO action
     );
 
-    List<PurchaseRequest> getOwnerPendingRequests();
-
-    PurchaseRequest ownerApprove(
-            Integer requestId,
-            ApprovalActionDTO action
-    );
-
-    PurchaseRequest ownerReject(
-            Integer requestId,
-            ApprovalActionDTO action
-    );
-
+    // Finance
     List<PurchaseRequest> getFinancePendingRequests();
 
     PurchaseRequest financeApprove(
@@ -44,5 +34,35 @@ public interface ApprovalService {
             ApprovalActionDTO action
     );
 
-    List<Approval> getApprovalHistory(Integer requestId);
+    // Owner / Director
+    List<PurchaseRequest> getOwnerPendingRequests();
+
+    PurchaseRequest ownerApprove(
+            Integer requestId,
+            ApprovalActionDTO action
+    );
+
+    PurchaseRequest ownerReject(
+            Integer requestId,
+            ApprovalActionDTO action
+    );
+
+    // Request-specific history
+    List<Approval> getApprovalHistory(
+            Integer requestId
+    );
+
+    // Approver-specific history
+    List<Approval> getApproverHistory(
+            Integer approverId
+    );
+
+    // Dashboard statistics
+    long getApprovedCount(
+            Integer approverId
+    );
+
+    long getRejectedCount(
+            Integer approverId
+    );
 }

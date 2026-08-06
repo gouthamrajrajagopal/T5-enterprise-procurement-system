@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.dto.ApprovalActionDTO;
+import com.t5.enterpriseprocurement.dto.ManagerDashboardStatsDTO;
 import com.t5.enterpriseprocurement.entity.Approval;
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
 import com.t5.enterpriseprocurement.service.ApprovalService;
@@ -18,113 +19,125 @@ public class ApprovalController {
 
     private final ApprovalService approvalService;
 
-    public ApprovalController(
-            ApprovalService approvalService) {
-
+    public ApprovalController(ApprovalService approvalService) {
         this.approvalService = approvalService;
     }
 
-    @GetMapping("/manager/pending")
-    public List<PurchaseRequest>
-    getManagerPendingRequests() {
+    /* =========================================================
+                       MANAGER
+       ========================================================= */
 
-        return approvalService
-                .getManagerPendingRequests();
+    @GetMapping("/manager/pending")
+    public List<PurchaseRequest> getManagerPendingRequests() {
+        return approvalService.getManagerPendingRequests();
     }
 
     @PutMapping("/manager/{requestId}/approve")
     public PurchaseRequest managerApprove(
             @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
+            @Valid @RequestBody ApprovalActionDTO action) {
 
-        return approvalService.managerApprove(
-                requestId,
-                action
-        );
+        return approvalService.managerApprove(requestId, action);
     }
 
     @PutMapping("/manager/{requestId}/reject")
     public PurchaseRequest managerReject(
             @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
+            @Valid @RequestBody ApprovalActionDTO action) {
 
-        return approvalService.managerReject(
-                requestId,
-                action
-        );
+        return approvalService.managerReject(requestId, action);
     }
 
-    @GetMapping("/owner/pending")
-    public List<PurchaseRequest>
-    getOwnerPendingRequests() {
-
-        return approvalService
-                .getOwnerPendingRequests();
-    }
-
-    @PutMapping("/owner/{requestId}/approve")
-    public PurchaseRequest ownerApprove(
-            @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
-
-        return approvalService.ownerApprove(
-                requestId,
-                action
-        );
-    }
-
-    @PutMapping("/owner/{requestId}/reject")
-    public PurchaseRequest ownerReject(
-            @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
-
-        return approvalService.ownerReject(
-                requestId,
-                action
-        );
-    }
+    /* =========================================================
+                       FINANCE
+       ========================================================= */
 
     @GetMapping("/finance/pending")
-    public List<PurchaseRequest>
-    getFinancePendingRequests() {
-
-        return approvalService
-                .getFinancePendingRequests();
+    public List<PurchaseRequest> getFinancePendingRequests() {
+        return approvalService.getFinancePendingRequests();
     }
 
     @PutMapping("/finance/{requestId}/approve")
     public PurchaseRequest financeApprove(
             @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
+            @Valid @RequestBody ApprovalActionDTO action) {
 
-        return approvalService.financeApprove(
-                requestId,
-                action
-        );
+        return approvalService.financeApprove(requestId, action);
     }
 
     @PutMapping("/finance/{requestId}/reject")
     public PurchaseRequest financeReject(
             @PathVariable Integer requestId,
-            @Valid @RequestBody
-            ApprovalActionDTO action) {
+            @Valid @RequestBody ApprovalActionDTO action) {
 
-        return approvalService.financeReject(
-                requestId,
-                action
-        );
+        return approvalService.financeReject(requestId, action);
     }
+
+    /* =========================================================
+                       DIRECTOR (OWNER)
+       ========================================================= */
+
+    @GetMapping("/owner/pending")
+    public List<PurchaseRequest> getOwnerPendingRequests() {
+        return approvalService.getOwnerPendingRequests();
+    }
+
+    @PutMapping("/owner/{requestId}/approve")
+    public PurchaseRequest ownerApprove(
+            @PathVariable Integer requestId,
+            @Valid @RequestBody ApprovalActionDTO action) {
+
+        return approvalService.ownerApprove(requestId, action);
+    }
+
+    @PutMapping("/owner/{requestId}/reject")
+    public PurchaseRequest ownerReject(
+            @PathVariable Integer requestId,
+            @Valid @RequestBody ApprovalActionDTO action) {
+
+        return approvalService.ownerReject(requestId, action);
+    }
+
+    /* =========================================================
+                  APPROVAL HISTORY
+       ========================================================= */
 
     @GetMapping("/request/{requestId}")
     public List<Approval> getApprovalHistory(
             @PathVariable Integer requestId) {
 
-        return approvalService
-                .getApprovalHistory(requestId);
+        return approvalService.getApprovalHistory(requestId);
     }
+
+    @GetMapping("/approver/{approverId}/history")
+    public List<Approval> getApproverHistory(
+            @PathVariable Integer approverId) {
+
+        return approvalService.getApproverHistory(approverId);
+    }
+
+    /* =========================================================
+                 MANAGER DASHBOARD STATS
+       ========================================================= */
+
+    @GetMapping("/manager/{managerId}/stats")
+    public ManagerDashboardStatsDTO getManagerDashboardStats(
+            @PathVariable Integer managerId) {
+
+        long pendingCount =
+                approvalService.getManagerPendingRequests().size();
+
+        long approvedCount =
+                approvalService.getApprovedCount(managerId);
+
+        long rejectedCount =
+                approvalService.getRejectedCount(managerId);
+
+        return new ManagerDashboardStatsDTO(
+                pendingCount,
+                approvedCount,
+                rejectedCount
+        );
+    }
+
 }

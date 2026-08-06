@@ -55,7 +55,8 @@ public class PurchaseRequest {
     @OneToMany(
             mappedBy = "purchaseRequest",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
     )
     @JsonManagedReference
     private List<PurchaseRequestItem> items = new ArrayList<>();

@@ -75,11 +75,15 @@ public class VendorSelectionServiceImpl
         String role =
                 selectedBy.getRole().getRoleName();
 
-        if (!"ADMIN".equalsIgnoreCase(role)
-                && !"FINANCE".equalsIgnoreCase(role)) {
+        if (
+                !role.equalsIgnoreCase("ADMIN") &&
+                        !role.equalsIgnoreCase("FINANCE") &&
+                        !role.equalsIgnoreCase("PROCUREMENT_OFFICER") &&
+                        !role.equalsIgnoreCase("PROCUREMENT")
+        ) {
 
             throw new RuntimeException(
-                    "Only ADMIN or FINANCE can select a vendor"
+                    "Only Procurement Officer, Finance or Admin can select a vendor"
             );
         }
 
@@ -105,5 +109,31 @@ public class VendorSelectionServiceImpl
         );
 
         return purchaseRequestRepository.save(request);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<PurchaseRequest> getProcessedVendorSelections() {
+
+        List<PurchaseRequest> requests =
+                purchaseRequestRepository
+                        .findBySelectedSupplierIsNotNullOrderByUpdatedAtDesc();
+
+        requests.forEach(request -> {
+            request.getItems().size();
+
+            if (request.getSelectedSupplier() != null) {
+                request.getSelectedSupplier().getSupplierId();
+            }
+
+            if (request.getUser() != null) {
+                request.getUser().getUserId();
+            }
+
+            if (request.getDepartment() != null) {
+                request.getDepartment().getDeptId();
+            }
+        });
+
+        return requests;
     }
 }

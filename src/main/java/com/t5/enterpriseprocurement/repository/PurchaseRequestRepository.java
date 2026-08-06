@@ -15,4 +15,6 @@ public interface PurchaseRequestRepository
     List<PurchaseRequest> findByStatus(
             PurchaseRequestStatus status
     );
+    List<PurchaseRequest>
+    findBySelectedSupplierIsNotNullOrderByUpdatedAtDesc();
 }

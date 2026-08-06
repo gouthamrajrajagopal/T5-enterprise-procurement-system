@@ -495,51 +495,26 @@ public class PurchaseRequestServiceImpl
             PurchaseRequest request,
             BigDecimal totalAmount
     ) {
-        if (totalAmount.compareTo(
-                AUTO_APPROVAL_LIMIT
-        ) <= 0) {
 
+        if (totalAmount.compareTo(AUTO_APPROVAL_LIMIT) <= 0) {
+
+            // Auto approved -> Procurement
             request.setStatus(
-                    PurchaseRequestStatus
-                            .VENDOR_SELECTION_PENDING
+                    PurchaseRequestStatus.VENDOR_SELECTION_PENDING
             );
 
             request.setCurrentApprovalLevel(0);
 
-        } else if (
-                totalAmount.compareTo(
-                        MANAGER_APPROVAL_LIMIT
-                ) <= 0
-        ) {
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_MANAGER_APPROVAL
-            );
-
-            request.setCurrentApprovalLevel(1);
-
-        } else if (
-                totalAmount.compareTo(
-                        FINANCE_APPROVAL_LIMIT
-                ) <= 0
-        ) {
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_FINANCE_APPROVAL
-            );
-
-            request.setCurrentApprovalLevel(1);
-
         } else {
+
+            // Every request above ₹10,000 starts with Manager Approval
             request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_OWNER_APPROVAL
+                    PurchaseRequestStatus.PENDING_MANAGER_APPROVAL
             );
 
             request.setCurrentApprovalLevel(1);
         }
     }
-
     private boolean isEditableStatus(
             PurchaseRequestStatus status
     ) {

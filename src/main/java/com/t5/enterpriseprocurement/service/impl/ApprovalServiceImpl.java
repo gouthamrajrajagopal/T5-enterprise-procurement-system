@@ -28,17 +28,35 @@ public class ApprovalServiceImpl implements ApprovalService {
             ApprovalRepository approvalRepository,
             UserRepository userRepository) {
 
-        this.purchaseRequestRepository = purchaseRequestRepository;
-        this.approvalRepository = approvalRepository;
-        this.userRepository = userRepository;
+        this.purchaseRequestRepository =
+                purchaseRequestRepository;
+
+        this.approvalRepository =
+                approvalRepository;
+
+        this.userRepository =
+                userRepository;
     }
 
+    /* =========================================================
+                       MANAGER
+       ========================================================= */
+
     @Override
+    @Transactional(readOnly = true)
     public List<PurchaseRequest> getManagerPendingRequests() {
 
-        return purchaseRequestRepository.findByStatus(
-                PurchaseRequestStatus.PENDING_MANAGER_APPROVAL
+        List<PurchaseRequest> requests =
+                purchaseRequestRepository.findByStatus(
+                        PurchaseRequestStatus
+                                .PENDING_MANAGER_APPROVAL
+                );
+
+        requests.forEach(
+                this::initializePurchaseRequest
         );
+
+        return requests;
     }
 
     @Override
@@ -47,7 +65,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User manager = getApprover(
                 action.getApproverId(),
@@ -56,7 +75,8 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_MANAGER_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_MANAGER_APPROVAL,
                 "Request is not pending manager approval"
         );
 
@@ -68,13 +88,24 @@ public class ApprovalServiceImpl implements ApprovalService {
                 action.getRemarks()
         );
 
+        /*
+         * Business rule:
+         * Manager handles only ₹10,001–₹50,000 requests.
+         * After Manager approval, send directly to Procurement.
+         */
         request.setStatus(
-                PurchaseRequestStatus.VENDOR_SELECTION_PENDING
+                PurchaseRequestStatus
+                        .VENDOR_SELECTION_PENDING
         );
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
     @Override
@@ -83,7 +114,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User manager = getApprover(
                 action.getApproverId(),
@@ -92,11 +124,14 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_MANAGER_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_MANAGER_APPROVAL,
                 "Request is not pending manager approval"
         );
 
-        validateRejectionRemarks(action.getRemarks());
+        validateRejectionRemarks(
+                action.getRemarks()
+        );
 
         saveApproval(
                 requestId,
@@ -112,15 +147,33 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
+    /* =========================================================
+                       FINANCE
+       ========================================================= */
+
     @Override
+    @Transactional(readOnly = true)
     public List<PurchaseRequest> getFinancePendingRequests() {
 
-        return purchaseRequestRepository.findByStatus(
-                PurchaseRequestStatus.PENDING_FINANCE_APPROVAL
+        List<PurchaseRequest> requests =
+                purchaseRequestRepository.findByStatus(
+                        PurchaseRequestStatus
+                                .PENDING_FINANCE_APPROVAL
+                );
+
+        requests.forEach(
+                this::initializePurchaseRequest
         );
+
+        return requests;
     }
 
     @Override
@@ -129,7 +182,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User finance = getApprover(
                 action.getApproverId(),
@@ -138,25 +192,37 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_FINANCE_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_FINANCE_APPROVAL,
                 "Request is not pending finance approval"
         );
 
         saveApproval(
                 requestId,
                 finance,
-                1,
+                2,
                 ApprovalStatus.APPROVED,
                 action.getRemarks()
         );
 
+        /*
+         * Business rule:
+         * Finance handles only ₹50,001–₹1,00,000 requests.
+         * After Finance approval, send directly to Procurement.
+         */
         request.setStatus(
-                PurchaseRequestStatus.VENDOR_SELECTION_PENDING
+                PurchaseRequestStatus
+                        .VENDOR_SELECTION_PENDING
         );
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
     @Override
@@ -165,7 +231,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User finance = getApprover(
                 action.getApproverId(),
@@ -174,16 +241,19 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_FINANCE_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_FINANCE_APPROVAL,
                 "Request is not pending finance approval"
         );
 
-        validateRejectionRemarks(action.getRemarks());
+        validateRejectionRemarks(
+                action.getRemarks()
+        );
 
         saveApproval(
                 requestId,
                 finance,
-                1,
+                2,
                 ApprovalStatus.REJECTED,
                 action.getRemarks()
         );
@@ -194,15 +264,33 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
+    /* =========================================================
+                  OWNER / DIRECTOR
+       ========================================================= */
+
     @Override
+    @Transactional(readOnly = true)
     public List<PurchaseRequest> getOwnerPendingRequests() {
 
-        return purchaseRequestRepository.findByStatus(
-                PurchaseRequestStatus.PENDING_OWNER_APPROVAL
+        List<PurchaseRequest> requests =
+                purchaseRequestRepository.findByStatus(
+                        PurchaseRequestStatus
+                                .PENDING_OWNER_APPROVAL
+                );
+
+        requests.forEach(
+                this::initializePurchaseRequest
         );
+
+        return requests;
     }
 
     @Override
@@ -211,7 +299,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User owner = getApprover(
                 action.getApproverId(),
@@ -220,25 +309,37 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_OWNER_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_OWNER_APPROVAL,
                 "Request is not pending owner approval"
         );
 
         saveApproval(
                 requestId,
                 owner,
-                1,
+                3,
                 ApprovalStatus.APPROVED,
                 action.getRemarks()
         );
 
+        /*
+         * Business rule:
+         * Owner/Director handles requests above ₹1,00,000.
+         * After approval, send directly to Procurement.
+         */
         request.setStatus(
-                PurchaseRequestStatus.VENDOR_SELECTION_PENDING
+                PurchaseRequestStatus
+                        .VENDOR_SELECTION_PENDING
         );
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
     @Override
@@ -247,7 +348,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             Integer requestId,
             ApprovalActionDTO action) {
 
-        PurchaseRequest request = getRequest(requestId);
+        PurchaseRequest request =
+                getRequest(requestId);
 
         User owner = getApprover(
                 action.getApproverId(),
@@ -256,16 +358,19 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         validateRequestStatus(
                 request,
-                PurchaseRequestStatus.PENDING_OWNER_APPROVAL,
+                PurchaseRequestStatus
+                        .PENDING_OWNER_APPROVAL,
                 "Request is not pending owner approval"
         );
 
-        validateRejectionRemarks(action.getRemarks());
+        validateRejectionRemarks(
+                action.getRemarks()
+        );
 
         saveApproval(
                 requestId,
                 owner,
-                1,
+                3,
                 ApprovalStatus.REJECTED,
                 action.getRemarks()
         );
@@ -276,55 +381,137 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         request.setCurrentApprovalLevel(0);
 
-        return purchaseRequestRepository.save(request);
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        initializePurchaseRequest(savedRequest);
+
+        return savedRequest;
     }
 
+    /* =========================================================
+                    APPROVAL HISTORY
+       ========================================================= */
+
     @Override
+    @Transactional(readOnly = true)
     public List<Approval> getApprovalHistory(
             Integer requestId) {
 
-        if (!purchaseRequestRepository.existsById(requestId)) {
+        if (!purchaseRequestRepository
+                .existsById(requestId)) {
 
             throw new RuntimeException(
-                    "Purchase request not found"
+                    "Purchase request not found with ID: "
+                            + requestId
             );
         }
 
-        return approvalRepository.findByRequestId(requestId);
+        return approvalRepository
+                .findByRequestId(requestId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Approval> getApproverHistory(
+            Integer approverId) {
+
+        if (!userRepository.existsById(approverId)) {
+
+            throw new RuntimeException(
+                    "Approver not found with ID: "
+                            + approverId
+            );
+        }
+
+        return approvalRepository
+                .findByApproverId(approverId);
+    }
+
+    /* =========================================================
+                    DASHBOARD COUNTS
+       ========================================================= */
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getApprovedCount(
+            Integer approverId) {
+
+        return approvalRepository
+                .countByApproverIdAndStatus(
+                        approverId,
+                        ApprovalStatus.APPROVED
+                );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getRejectedCount(
+            Integer approverId) {
+
+        return approvalRepository
+                .countByApproverIdAndStatus(
+                        approverId,
+                        ApprovalStatus.REJECTED
+                );
+    }
+
+    /* =========================================================
+                    PRIVATE HELPERS
+       ========================================================= */
 
     private PurchaseRequest getRequest(
             Integer requestId) {
 
-        return purchaseRequestRepository
-                .findById(requestId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Purchase request not found"
-                        ));
+        PurchaseRequest request =
+                purchaseRequestRepository
+                        .findById(requestId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Purchase request not found with ID: "
+                                                + requestId
+                                )
+                        );
+
+        initializePurchaseRequest(request);
+
+        return request;
     }
 
     private User getApprover(
             Integer approverId,
             String requiredRole) {
 
-        User user = userRepository.findById(approverId)
+        User user = userRepository
+                .findById(approverId)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Approver not found"
-                        ));
+                                "Approver not found with ID: "
+                                        + approverId
+                        )
+                );
 
-        if (!requiredRole.equalsIgnoreCase(
-                user.getRole().getRoleName())) {
+        if (user.getRole() == null) {
 
             throw new RuntimeException(
-                    "Only a " + requiredRole
+                    "Approver does not have a role"
+            );
+        }
+
+        if (!requiredRole.equalsIgnoreCase(
+                user.getRole().getRoleName()
+        )) {
+
+            throw new RuntimeException(
+                    "Only a "
+                            + requiredRole
                             + " can perform this action"
             );
         }
 
         if (!"ACTIVE".equalsIgnoreCase(
-                user.getStatus())) {
+                user.getStatus()
+        )) {
 
             throw new RuntimeException(
                     "Approver account is inactive"
@@ -344,13 +531,17 @@ public class ApprovalServiceImpl implements ApprovalService {
         Approval approval = new Approval();
 
         approval.setRequestId(requestId);
+
         approval.setApproverId(
                 approver.getUserId()
         );
+
         approval.setApprovalLevel(level);
+
         approval.setApproverRole(
                 approver.getRole().getRoleName()
         );
+
         approval.setStatus(status);
         approval.setRemarks(remarks);
 
@@ -363,6 +554,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             String message) {
 
         if (request.getStatus() != expectedStatus) {
+
             throw new RuntimeException(message);
         }
     }
@@ -370,11 +562,67 @@ public class ApprovalServiceImpl implements ApprovalService {
     private void validateRejectionRemarks(
             String remarks) {
 
-        if (remarks == null || remarks.isBlank()) {
+        if (remarks == null ||
+                remarks.isBlank()) {
 
             throw new RuntimeException(
                     "Remarks are required when rejecting a request"
             );
+        }
+    }
+
+    /**
+     * Initializes lazy-loaded relationships while the transaction
+     * is active, preventing JSON serialization errors.
+     */
+    private void initializePurchaseRequest(
+            PurchaseRequest request) {
+
+        if (request.getItems() != null) {
+
+            request.getItems().size();
+
+            request.getItems().forEach(item -> {
+
+                if (item.getCategory() != null) {
+
+                    item.getCategory()
+                            .getCategoryId();
+                }
+            });
+        }
+
+        if (request.getUser() != null) {
+
+            request.getUser().getUserId();
+            request.getUser().getName();
+
+            if (request.getUser().getRole() != null) {
+
+                request.getUser()
+                        .getRole()
+                        .getRoleName();
+            }
+
+            if (request.getUser()
+                    .getDepartment() != null) {
+
+                request.getUser()
+                        .getDepartment()
+                        .getDeptId();
+            }
+        }
+
+        if (request.getDepartment() != null) {
+
+            request.getDepartment()
+                    .getDeptId();
+        }
+
+        if (request.getSelectedSupplier() != null) {
+
+            request.getSelectedSupplier()
+                    .getSupplierId();
         }
     }
 }
