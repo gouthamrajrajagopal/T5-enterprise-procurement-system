@@ -22,12 +22,31 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { loginUser } from "../api/authApi";
 
+const roleRoutes = {
+    EMPLOYEE: "/employee/dashboard",
+    MANAGER: "/manager/dashboard",
+    FINANCE: "/finance/dashboard",
+    OWNER: "/owner/dashboard",
+    DIRECTOR: "/director/dashboard",
+
+    PROCUREMENT: "/procurement/dashboard",
+    PROCUREMENT_HEAD: "/procurement/dashboard",
+    PROCUREMENT_OFFICER: "/procurement/dashboard",
+
+    ADMIN: "/procurement/dashboard",
+};
+
 function Login() {
     const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [showPassword, setShowPassword] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
 
     const [login, setLogin] = useState({
         email: "",
@@ -48,8 +67,13 @@ function Login() {
     const handleLogin = async (event) => {
         event.preventDefault();
 
-        const email = String(login.email || "").trim();
-        const password = String(login.password || "");
+        const email = String(
+            login.email || ""
+        ).trim();
+
+        const password = String(
+            login.password || ""
+        );
 
         if (!email) {
             setError("Email is required");
@@ -76,43 +100,69 @@ function Login() {
                 );
             }
 
-            const role = String(data.role || "")
+            const role = String(
+                data.role ??
+                data.roleName ??
+                data.user?.role?.roleName ??
+                ""
+            )
                 .trim()
-                .toUpperCase();
+                .toUpperCase()
+                .replace(/^ROLE_/, "");
 
-            localStorage.setItem("token", data.token);
-            localStorage.setItem(
-                "userId",
-                String(data.userId ?? "")
-            );
-            localStorage.setItem(
-                "name",
-                data.name || email.split("@")[0]
-            );
-            localStorage.setItem("role", role);
-            localStorage.setItem("email", email);
+            const userId =
+                data.userId ??
+                data.id ??
+                data.user?.userId ??
+                data.user?.id;
 
-            const roleRoutes = {
-                EMPLOYEE: "/employee/dashboard",
-                MANAGER: "/manager/dashboard",
-                FINANCE: "/finance/dashboard",
-                DIRECTOR: "/director/dashboard",
-                OWNER: "/owner/dashboard",
-                PROCUREMENT_HEAD: "/procurement/dashboard",
-                ADMIN: "/admin/dashboard",
-            };
+            const userName =
+                data.name ??
+                data.userName ??
+                data.user?.name ??
+                email.split("@")[0];
 
-            const destination = roleRoutes[role];
+            if (!userId) {
+                throw new Error(
+                    "User ID was not returned by the server"
+                );
+            }
+
+            const destination =
+                roleRoutes[role];
 
             if (!destination) {
-                localStorage.clear();
-                setError(
+                throw new Error(
                     `No dashboard is configured for role: ${
                         role || "UNKNOWN"
                     }`
                 );
-                return;
             }
+
+            localStorage.setItem(
+                "token",
+                data.token
+            );
+
+            localStorage.setItem(
+                "userId",
+                String(userId)
+            );
+
+            localStorage.setItem(
+                "name",
+                userName
+            );
+
+            localStorage.setItem(
+                "role",
+                role
+            );
+
+            localStorage.setItem(
+                "email",
+                email
+            );
 
             navigate(destination, {
                 replace: true,
@@ -121,8 +171,11 @@ function Login() {
             console.error(
                 "Login error:",
                 loginError.response?.status,
-                loginError.response?.data
+                loginError.response?.data,
+                loginError
             );
+
+            localStorage.clear();
 
             setError(
                 loginError.response?.data?.message ||
@@ -145,7 +198,8 @@ function Login() {
                 justifyContent: "center",
                 position: "relative",
                 overflow: "hidden",
-                backgroundColor: "var(--bg-primary)",
+                backgroundColor:
+                    "var(--bg-primary)",
                 px: 2,
                 boxSizing: "border-box",
             }}
@@ -192,7 +246,8 @@ function Login() {
                             md: "flex",
                         },
                         flexDirection: "column",
-                        justifyContent: "space-between",
+                        justifyContent:
+                            "space-between",
                         borderRight:
                             "1px solid var(--border-subtle)",
                     }}
@@ -213,13 +268,16 @@ function Login() {
                                     "var(--gradient-primary)",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center",
+                                justifyContent:
+                                    "center",
                                 boxShadow:
                                     "0 0 20px rgba(99, 102, 241, 0.4)",
                             }}
                         >
                             <AutoAwesomeIcon
-                                sx={{ color: "#fff" }}
+                                sx={{
+                                    color: "#fff",
+                                }}
                             />
                         </Box>
 
@@ -227,7 +285,8 @@ function Login() {
                             variant="h6"
                             sx={{
                                 fontWeight: 700,
-                                letterSpacing: "-0.5px",
+                                letterSpacing:
+                                    "-0.5px",
                             }}
                         >
                             Procure
@@ -258,18 +317,23 @@ function Login() {
                         <Typography
                             variant="body2"
                             color="text.secondary"
-                            sx={{ mb: 3 }}
+                            sx={{
+                                mb: 3,
+                            }}
                         >
-                            Automate vendor onboarding,
-                            compliance tracking, purchase order
-                            approvals and invoice routing with
-                            real-time audit trails.
+                            Automate vendor
+                            onboarding, compliance
+                            tracking, purchase order
+                            approvals and invoice
+                            routing with real-time
+                            audit trails.
                         </Typography>
 
                         <Box
                             sx={{
                                 display: "flex",
-                                flexDirection: "column",
+                                flexDirection:
+                                    "column",
                                 gap: 1.5,
                             }}
                         >
@@ -285,8 +349,8 @@ function Login() {
                         variant="caption"
                         color="text.secondary"
                     >
-                        © 2026 ProcureX Enterprise Ltd. All
-                        Rights Reserved.
+                        © 2026 ProcureX Enterprise
+                        Ltd. All Rights Reserved.
                     </Typography>
                 </Box>
 
@@ -316,8 +380,8 @@ function Login() {
                             variant="body2"
                             color="text.secondary"
                         >
-                            Sign in to access your procurement
-                            dashboard
+                            Sign in to access your
+                            procurement dashboard
                         </Typography>
                     </Box>
 
@@ -430,13 +494,16 @@ function Login() {
                             size="large"
                             type="submit"
                             disabled={loading}
-                            endIcon={<ArrowForwardIcon />}
+                            endIcon={
+                                <ArrowForwardIcon />
+                            }
                             sx={{
                                 mt: 3,
                                 py: 1.5,
                                 background:
                                     "var(--gradient-primary)",
-                                fontSize: "0.95rem",
+                                fontSize:
+                                    "0.95rem",
                                 fontWeight: 700,
                             }}
                         >
@@ -452,13 +519,16 @@ function Login() {
                         color="text.secondary"
                         sx={{ mt: 3 }}
                     >
-                        Don&apos;t have an account?{" "}
+                        Don&apos;t have an
+                        account?{" "}
                         <Link
                             to="/register"
                             style={{
-                                color: "var(--primary)",
+                                color:
+                                    "var(--primary)",
                                 fontWeight: 700,
-                                textDecoration: "none",
+                                textDecoration:
+                                    "none",
                             }}
                         >
                             Register Account
@@ -489,7 +559,9 @@ function FeatureItem({ text }) {
             <Typography
                 variant="caption"
                 color="text.primary"
-                sx={{ fontWeight: 600 }}
+                sx={{
+                    fontWeight: 600,
+                }}
             >
                 {text}
             </Typography>
