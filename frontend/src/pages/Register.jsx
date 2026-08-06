@@ -40,10 +40,12 @@ function Register() {
 
     const loadDepartments = async () => {
         try {
-            const response = await getAllDepartments();
-            if (response.data && response.data.length > 0) {
-                setDepartments(response.data);
-            } else {
+            const departments = await getAllDepartments();
+
+            if (departments && departments.length > 0) {
+                setDepartments(departments);
+            }
+             else {
                 throw new Error("Empty backend database");
             }
         } catch (error) {
@@ -71,11 +73,16 @@ function Register() {
             const response = await registerUser(user);
             alert(response.data.message || "Registration Successful!");
             navigate("/login");
-        } catch (error) {
-            console.log(error);
-            alert("Registration Submitted Successfully (Demo Mode).");
-            navigate("/login");
-        } finally {
+        }
+        catch (error) {
+            console.error(error);
+
+            alert(
+                error.response?.data?.message ||
+                JSON.stringify(error.response?.data) ||
+                "Registration Failed"
+            );
+        }         finally {
             setLoading(false);
         }
     };

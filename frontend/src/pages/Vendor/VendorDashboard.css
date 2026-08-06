@@ -1,0 +1,196 @@
+/* App Layout Structure */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    position: relative;
+}
+
+.main-wrapper {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: var(--transition-normal);
+}
+
+.dashboard-body {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* Hero Banner */
+.hero-banner {
+    position: relative;
+    padding: 36px 40px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.15);
+}
+
+.hero-banner::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,.25) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.hero-content {
+    max-width: 620px;
+    z-index: 1;
+}
+
+.hero-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.hero-sub {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 14px;
+}
+
+.hero-btn-primary {
+    background: var(--gradient-primary) !important;
+}
+
+.hero-btn-secondary {
+    color: var(--text-primary) !important;
+    border-color: var(--border-light) !important;
+}
+
+/* KPI Cards */
+.kpi-card {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.kpi-title {
+    color: var(--text-muted);
+}
+
+.kpi-footer {
+    margin-top: auto;
+}
+
+/* Panels */
+.pipeline-card,
+.activity-card,
+.rfq-table,
+.performance-card,
+.orders-card,
+.notification-card {
+    padding: 24px;
+    height: 100%;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Quick Modules */
+.module-card {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.module-card h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.module-card p {
+    color: var(--text-muted);
+    font-size: .82rem;
+}
+
+.module-icon {
+    color: var(--primary);
+    font-size: 34px !important;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    color: var(--text-secondary);
+}
+
+td {
+    color: var(--text-primary);
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+
+    .dashboard-body {
+        padding: 20px;
+    }
+
+    .hero-banner {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .hero-actions {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}

@@ -100,6 +100,7 @@ function Login() {
                 OWNER: "/owner/dashboard",
                 PROCUREMENT_HEAD: "/procurement/dashboard",
                 ADMIN: "/admin/dashboard",
+                VENDOR: "/Vendor/dashboard"
             };
 
             const destination = roleRoutes[role];
