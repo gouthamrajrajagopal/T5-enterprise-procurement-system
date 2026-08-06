@@ -202,112 +202,190 @@ CREATE TABLE IF NOT EXISTS supplier_performance (
 /* =========================
    PURCHASE REQUESTS
    ========================= */
+
 CREATE TABLE IF NOT EXISTS purchase_requests (
 
-    request_id INT PRIMARY KEY AUTO_INCREMENT,
+                                                 request_id INT PRIMARY KEY AUTO_INCREMENT,
+
+                                                 request_number VARCHAR(30) NOT NULL UNIQUE,
 
     user_id INT NOT NULL,
 
+    department_id INT NOT NULL,
+
+    purpose VARCHAR(255),
+
+    total_quantity INT DEFAULT 0,
+
+    total_amount DECIMAL(12,2) DEFAULT 0.00,
+
     status ENUM(
-        'PENDING',
-        'APPROVED',
-        'REJECTED'
-    ) DEFAULT 'PENDING',
+                   'DRAFT',
+                   'PENDING',
+                   'PENDING_MANAGER_APPROVAL',
+                   'PENDING_FINANCE_APPROVAL',
+                   'PENDING_OWNER_APPROVAL',
+                   'APPROVED',
+                   'REJECTED',
+                   'CANCELLED',
+                   'VENDOR_SELECTION_PENDING',
+                   'VENDOR_SELECTED',
+                   'PO_PENDING',
+                   'PO_GENERATED',
+                   'GOODS_RECEIPT_PENDING',
+                   'COMPLETED'
+               ) DEFAULT 'PENDING',
+
+    current_approval_level INT DEFAULT 0,
+
+    selected_supplier_id INT NULL,
 
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_purchase_request_user
     FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-);
+    REFERENCES users(user_id),
+
+    CONSTRAINT fk_purchase_request_department
+    FOREIGN KEY (department_id)
+    REFERENCES departments(dept_id),
+
+    CONSTRAINT fk_purchase_request_supplier
+    FOREIGN KEY (selected_supplier_id)
+    REFERENCES suppliers(supplier_id)
+    );
 
 /* =========================
    PURCHASE REQUEST ITEMS
    ========================= */
+
 CREATE TABLE IF NOT EXISTS purchase_request_items (
 
-    item_id INT PRIMARY KEY AUTO_INCREMENT,
+                                                      item_id INT PRIMARY KEY AUTO_INCREMENT,
 
-    request_id INT NOT NULL,
+                                                      request_id INT NOT NULL,
 
-    category_id INT NOT NULL,
+                                                      category_id INT NOT NULL,
 
-    item_name VARCHAR(100) NOT NULL,
+                                                      item_name VARCHAR(100) NOT NULL,
+
+    item_description VARCHAR(255),
 
     quantity INT NOT NULL,
 
-    estimated_price DECIMAL(10,2),
+    estimated_price DECIMAL(12,2) DEFAULT 0.00,
 
+    total_price DECIMAL(12,2) DEFAULT 0.00,
+
+    CONSTRAINT fk_pr_item_request
     FOREIGN KEY (request_id)
-        REFERENCES purchase_requests(request_id),
+    REFERENCES purchase_requests(request_id),
 
+    CONSTRAINT fk_pr_item_category
     FOREIGN KEY (category_id)
-        REFERENCES categories(category_id)
-);
+    REFERENCES categories(category_id)
+    );
+
+
 
 /* =========================
    APPROVALS
    ========================= */
+
 CREATE TABLE IF NOT EXISTS approvals (
 
-    approval_id INT PRIMARY KEY AUTO_INCREMENT,
+                                         approval_id INT PRIMARY KEY AUTO_INCREMENT,
 
-    request_id INT NOT NULL,
+                                         request_id INT NOT NULL,
 
-    approver_id INT NOT NULL,
+                                         approver_id INT NOT NULL,
+
+                                         approval_level INT DEFAULT 1,
+
+                                         approver_role VARCHAR(50),
 
     status ENUM(
-        'PENDING',
-        'APPROVED',
-        'REJECTED'
-    ) DEFAULT 'PENDING',
+                   'PENDING',
+                   'APPROVED',
+                   'REJECTED'
+               ) DEFAULT 'PENDING',
 
     remarks VARCHAR(255),
 
     approval_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    CONSTRAINT fk_approval_request
     FOREIGN KEY (request_id)
-        REFERENCES purchase_requests(request_id),
+    REFERENCES purchase_requests(request_id),
 
+    CONSTRAINT fk_approval_user
     FOREIGN KEY (approver_id)
-        REFERENCES users(user_id)
-);
-
+    REFERENCES users(user_id)
+    );
 /* =========================
    PURCHASE ORDERS
    ========================= */
+
 CREATE TABLE IF NOT EXISTS purchase_orders (
 
-    po_id INT PRIMARY KEY AUTO_INCREMENT,
+                                               po_id INT PRIMARY KEY AUTO_INCREMENT,
 
-    request_id INT UNIQUE,
+                                               po_number VARCHAR(30) NOT NULL UNIQUE,
 
-    supplier_id INT,
+    request_id INT NOT NULL UNIQUE,
+
+    supplier_id INT NOT NULL,
+
+    status VARCHAR(30) DEFAULT 'CREATED',
+
+    total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
 
     order_date DATE,
 
+    expected_delivery_date DATE,
+
+    actual_delivery_date DATE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_po_request
     FOREIGN KEY (request_id)
-        REFERENCES purchase_requests(request_id),
+    REFERENCES purchase_requests(request_id),
 
+    CONSTRAINT fk_po_supplier
     FOREIGN KEY (supplier_id)
-        REFERENCES suppliers(supplier_id)
-);
-
+    REFERENCES suppliers(supplier_id)
+    );
 /* =========================
    PURCHASE ORDER ITEMS
    ========================= */
+
 CREATE TABLE IF NOT EXISTS purchase_order_items (
 
-    po_item_id INT PRIMARY KEY AUTO_INCREMENT,
+                                                    po_item_id INT PRIMARY KEY AUTO_INCREMENT,
 
-    po_id INT NOT NULL,
+                                                    po_id INT NOT NULL,
 
-    item_name VARCHAR(100),
+                                                    item_name VARCHAR(100),
 
-    quantity INT,
+    item_description VARCHAR(255),
 
+    quantity INT NOT NULL,
+
+    unit_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    total_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    CONSTRAINT fk_po_item_order
     FOREIGN KEY (po_id)
-        REFERENCES purchase_orders(po_id)
-);
+    REFERENCES purchase_orders(po_id)
+    );
 
 /* =========================
    GOODS RECEIPTS
@@ -344,25 +422,17 @@ CREATE TABLE IF NOT EXISTS invoices (
     FOREIGN KEY (po_id)
         REFERENCES purchase_orders(po_id)
 );
+/* =========================
+   DEFAULT ROLES
+   ========================= */
 
 INSERT IGNORE INTO roles
 (role_id, role_name, description)
 VALUES
 (1, 'EMPLOYEE', 'Creates purchase requisitions'),
 (2, 'MANAGER', 'Approves or rejects requests'),
-(3, 'FINANCE', 'Handles budget, invoices and payment'),
-(4, 'ADMIN', 'Manages users and master data'),
-(5, 'OWNER', 'Approves high quantity requests'),
-(6, 'VENDOR', 'Receives purchase orders and updates delivery');
-
-
-
-       INSERT IGNORE INTO roles
-(role_id, role_name, description)
-VALUES
-(1, 'EMPLOYEE', 'Creates purchase requisitions'),
-(2, 'MANAGER', 'Approves or rejects requests'),
 (3, 'FINANCE', 'Handles budget, invoices and payments'),
 (4, 'ADMIN', 'Manages master data and users'),
-(5, 'OWNER', 'Approves high quantity requests'),
-(6, 'VENDOR', 'Receives purchase orders and updates delivery');
+(5, 'OWNER', 'Approves high-value purchase requests'),
+(6, 'VENDOR', 'Receives purchase orders and updates delivery'),
+(9, 'PROCUREMENT_OFFICER', 'Handles supplier selection and procurement activities');
