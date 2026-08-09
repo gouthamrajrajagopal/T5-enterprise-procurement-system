@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import DirectorDashboard from "./pages/Director/DirectorDashboard";
+
 import EmployeeDashboard from "./pages/Employee/EmployeeDashboard";
 import RaiseRequisition from "./pages/Employee/RaiseRequisition";
 import MyRequisitions from "./pages/Employee/MyRequisitions";
@@ -10,7 +10,7 @@ import RequisitionDetails from "./pages/Employee/RequisitionDetails";
 
 import VendorDashboard from "./pages/Vendor/VendorDashboard"; // Change to ./pages/vendor/VendorDashboard if needed
 
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./Components/ProtectedRoute";
 
 const EmployeeOnly = ({ children }) => (
     <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
@@ -90,10 +90,6 @@ export default function App() {
           />
 
 
-          <Route
-              path="/director/dashboard"
-              element={<DirectorDashboard />}
-          />
 
       </Routes>
       </BrowserRouter>

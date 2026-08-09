@@ -96,7 +96,6 @@ function Login() {
                 EMPLOYEE: "/employee/dashboard",
                 MANAGER: "/manager/dashboard",
                 FINANCE: "/finance/dashboard",
-                DIRECTOR: "/director/dashboard",
                 OWNER: "/owner/dashboard",
                 PROCUREMENT_HEAD: "/procurement/dashboard",
                 ADMIN: "/admin/dashboard",

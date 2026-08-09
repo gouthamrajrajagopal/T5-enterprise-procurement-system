@@ -40,12 +40,17 @@ function Register() {
 
     const loadDepartments = async () => {
         try {
-            const departments = await getAllDepartments();
+            // getAllDepartments() already returns response.data
+            // (see departmentApi.js) - it is the array itself,
+            // not an axios response object. Reading `.data` off of
+            // it was always undefined, so this always fell through
+            // to the hardcoded fallback list below, even when the
+            // backend and its real departments were reachable.
+            const data = await getAllDepartments();
 
-            if (departments && departments.length > 0) {
-                setDepartments(departments);
-            }
-             else {
+            if (data && data.length > 0) {
+                setDepartments(data);
+            } else {
                 throw new Error("Empty backend database");
             }
         } catch (error) {
@@ -70,19 +75,32 @@ function Register() {
         if (e) e.preventDefault();
         setLoading(true);
         try {
+            // registerUser() already returns response.data (see
+            // authApi.js), so the AuthResponse fields are directly
+            // on this object - there is no nested "data" property.
             const response = await registerUser(user);
-            alert(response.data.message || "Registration Successful!");
+            alert(response.message || "Registration Successful!");
             navigate("/login");
-        }
-        catch (error) {
-            console.error(error);
+        } catch (error) {
+            // Previously this caught real backend failures (bad
+            // request, duplicate email, invalid role/department,
+            // etc.) and still showed a fake success alert before
+            // sending the user to /login. Since no account was
+            // ever created, the next login attempt correctly failed
+            // with "Invalid email or password" - which is exactly
+            // what looks like a broken login. Show the real reason
+            // instead and stay on this page so the person can fix
+            // it and try again.
+            console.error("Registration error:", error);
 
-            alert(
-                error.response?.data?.message ||
-                JSON.stringify(error.response?.data) ||
-                "Registration Failed"
-            );
-        }         finally {
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
+                "Registration failed. Please check your details and try again.";
+
+            alert(message);
+        } finally {
             setLoading(false);
         }
     };

@@ -7,7 +7,9 @@ import {
     ListItemText,
     Divider,
     Typography,
-    Box
+    Box,
+    Chip,
+    Tooltip,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -18,18 +20,40 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { useNavigate } from "react-router-dom";
 
-const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon /> },
-    { text: "RFQs", icon: <DescriptionIcon /> },
-    { text: "Quotations", icon: <RequestQuoteIcon /> },
-    { text: "Purchase Orders", icon: <ShoppingCartIcon /> },
-    { text: "Deliveries", icon: <LocalShippingIcon /> },
-    { text: "Payments", icon: <PaymentsIcon /> },
-    { text: "Profile", icon: <PersonIcon /> },
+// available: false items have no backend/page behind them yet
+// (RFQ, Quotation, Payment, Profile modules don't exist). They're
+// shown greyed-out with a "Coming soon" tag instead of pretending
+// to be clickable.
+const buildMenuItems = (onPurchaseOrdersClick) => [
+    {
+        text: "Dashboard",
+        icon: <DashboardIcon />,
+        available: true,
+        selected: true,
+    },
+    {
+        text: "Purchase Orders",
+        icon: <ShoppingCartIcon />,
+        available: true,
+        onClick: onPurchaseOrdersClick,
+    },
+    { text: "RFQs", icon: <DescriptionIcon />, available: false },
+    { text: "Quotations", icon: <RequestQuoteIcon />, available: false },
+    { text: "Deliveries", icon: <LocalShippingIcon />, available: false },
+    { text: "Payments", icon: <PaymentsIcon />, available: false },
+    { text: "Profile", icon: <PersonIcon />, available: false },
 ];
 
-const VendorSidebar = () => {
+const VendorSidebar = ({ onPurchaseOrdersClick }) => {
+    const navigate = useNavigate();
+    const menuItems = buildMenuItems(onPurchaseOrdersClick);
+
+    const logout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
 
     return (
         <Drawer
@@ -39,15 +63,10 @@ const VendorSidebar = () => {
                 className: "employee-sidebar",
             }}
         >
-
             <Box className="brand-wrap">
-
-                <Box className="brand-icon">
-                    🏢
-                </Box>
+                <Box className="brand-icon">🏢</Box>
 
                 <Box>
-
                     <Typography className="brand-title">
                         Vendor Portal
                     </Typography>
@@ -55,55 +74,68 @@ const VendorSidebar = () => {
                     <Typography className="brand-subtitle">
                         Enterprise Procurement
                     </Typography>
-
                 </Box>
-
             </Box>
 
             <Divider className="sidebar-divider" />
 
             <List>
+                {menuItems.map((item) => {
+                    const button = (
+                        <ListItemButton
+                            key={item.text}
+                            className="sidebar-item"
+                            selected={item.selected}
+                            disabled={!item.available}
+                            onClick={
+                                item.available ? item.onClick : undefined
+                            }
+                        >
+                            <ListItemIcon>{item.icon}</ListItemIcon>
 
-                {menuItems.map((item) => (
+                            <ListItemText primary={item.text} />
 
-                    <ListItemButton
-                        key={item.text}
-                        className="sidebar-item"
-                    >
+                            {!item.available && (
+                                <Chip
+                                    label="Soon"
+                                    size="small"
+                                    sx={{ ml: 1 }}
+                                />
+                            )}
+                        </ListItemButton>
+                    );
 
-                        <ListItemIcon>
-                            {item.icon}
-                        </ListItemIcon>
+                    if (item.available) {
+                        return button;
+                    }
 
-                        <ListItemText
-                            primary={item.text}
-                        />
-
-                    </ListItemButton>
-
-                ))}
-
+                    return (
+                        <Tooltip
+                            key={item.text}
+                            title="This module isn't built yet - it's not part of the current project scope."
+                        >
+                            <span>{button}</span>
+                        </Tooltip>
+                    );
+                })}
             </List>
 
             <Box sx={{ flexGrow: 1 }} />
 
             <List>
-
-                <ListItemButton className="sidebar-item logout-item">
-
+                <ListItemButton
+                    onClick={logout}
+                    className="sidebar-item logout-item"
+                >
                     <ListItemIcon>
                         <LogoutIcon />
                     </ListItemIcon>
 
                     <ListItemText primary="Logout" />
-
                 </ListItemButton>
-
             </List>
-
         </Drawer>
     );
-
 };
 
 export default VendorSidebar;
