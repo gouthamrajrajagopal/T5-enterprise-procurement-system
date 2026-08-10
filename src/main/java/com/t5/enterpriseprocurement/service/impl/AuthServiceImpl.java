@@ -57,12 +57,19 @@ public class AuthServiceImpl implements AuthService {
     	user.setEmail(request.getEmail());
     	user.setPhone(request.getPhone());
 
-    	user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+    	
 
     	user.setRole(role);
     	user.setDepartment(department);
 
     	user.setStatus("ACTIVE");
+    	System.out.println("Original password: " + request.getPassword());
+
+    	String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+    	System.out.println("Encoded password: " + encodedPassword);
+
+    	user.setPasswordHash(encodedPassword);
     	User savedUser = userRepository.save(user);
 
     	return new RegisterResponseDTO(
@@ -79,10 +86,23 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Invalid email or password."));
+        System.out.println("User found: " + user.getEmail());
+        System.out.println("Stored hash: " + user.getPasswordHash());
 
-        if (!passwordEncoder.matches(request.getPassword(),
-                user.getPasswordHash())) {
+        boolean matches = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash());
 
+        System.out.println("Password entered: " + request.getPassword());
+        System.out.println("Manual BCrypt test: " +
+        	    new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
+        	        .matches(request.getPassword(), user.getPasswordHash()));
+
+        	System.out.println("Injected PasswordEncoder class: " +
+        	    passwordEncoder.getClass().getName());
+        System.out.println("Password matches: " + matches);
+
+        if (!matches) {
             throw new IllegalArgumentException("Invalid email or password.");
         }
 
