@@ -1,0 +1,139 @@
+package com.t5.enterpriseprocurement.service.impl;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.t5.enterpriseprocurement.dto.PurchaseRequestDTO;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
+import com.t5.enterpriseprocurement.entity.Department;
+import com.t5.enterpriseprocurement.entity.PurchaseRequest;
+import com.t5.enterpriseprocurement.entity.User;
+import com.t5.enterpriseprocurement.repository.DepartmentRepository;
+import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
+import com.t5.enterpriseprocurement.repository.UserRepository;
+import com.t5.enterpriseprocurement.service.PurchaseRequestService;
+
+@Service
+public class PurchaseRequestServiceImpl implements PurchaseRequestService {
+
+    private final PurchaseRequestRepository purchaseRequestRepository;
+    private final DepartmentRepository departmentRepository;
+    private final UserRepository userRepository;
+
+    public PurchaseRequestServiceImpl(
+            PurchaseRequestRepository purchaseRequestRepository,
+            DepartmentRepository departmentRepository,
+            UserRepository userRepository) {
+
+        this.purchaseRequestRepository = purchaseRequestRepository;
+        this.departmentRepository = departmentRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public PurchaseRequestResponseDTO createPurchaseRequest(PurchaseRequestDTO requestDTO) {
+
+        Department department = departmentRepository.findById(requestDTO.getDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Department not found."));
+
+        // Temporary until JWT integration
+        User user = userRepository.findById(3)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+
+        PurchaseRequest purchaseRequest = new PurchaseRequest();
+
+        purchaseRequest.setRequestNumber(generateRequestNumber());
+        purchaseRequest.setUser(user);
+        purchaseRequest.setDepartment(department);
+        purchaseRequest.setDescription(requestDTO.getDescription());
+        purchaseRequest.setQuantity(requestDTO.getQuantity());
+        purchaseRequest.setEstimatedAmount(requestDTO.getEstimatedAmount());
+        purchaseRequest.setUrgent(requestDTO.getUrgent());
+
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(purchaseRequest);
+
+        return convertToResponse(savedRequest);
+    }
+
+    @Override
+    public List<PurchaseRequestResponseDTO> getAllPurchaseRequests() {
+
+        return purchaseRequestRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PurchaseRequestResponseDTO getPurchaseRequestById(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
+
+        return convertToResponse(request);
+    }
+
+    @Override
+    public PurchaseRequestResponseDTO updatePurchaseRequest(
+            Integer requestId,
+            PurchaseRequestDTO requestDTO) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
+
+        Department department = departmentRepository.findById(requestDTO.getDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException("Department not found."));
+
+        request.setDepartment(department);
+        request.setDescription(requestDTO.getDescription());
+        request.setQuantity(requestDTO.getQuantity());
+        request.setEstimatedAmount(requestDTO.getEstimatedAmount());
+        request.setUrgent(requestDTO.getUrgent());
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(updated);
+    }
+
+    @Override
+    public void deletePurchaseRequest(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
+
+        purchaseRequestRepository.delete(request);
+    }
+
+    private String generateRequestNumber() {
+
+        return "PR-" +
+                LocalDateTime.now().format(
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+
+    private PurchaseRequestResponseDTO convertToResponse(
+            PurchaseRequest request) {
+
+        PurchaseRequestResponseDTO response =
+                new PurchaseRequestResponseDTO();
+
+        response.setRequestId(request.getRequestId());
+        response.setRequestNumber(request.getRequestNumber());
+        response.setDescription(request.getDescription());
+        response.setQuantity(request.getQuantity());
+        response.setEstimatedAmount(request.getEstimatedAmount());
+        response.setUrgent(request.getUrgent());
+        response.setStatus(request.getStatus());
+        response.setDepartmentName(request.getDepartment().getDeptName());
+        response.setCreatedBy(request.getUser().getName());
+        response.setCreatedAt(request.getCreatedAt());
+
+        return response;
+    }
+}
