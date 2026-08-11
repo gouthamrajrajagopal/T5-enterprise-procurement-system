@@ -24,6 +24,10 @@ public class PurchaseRequest {
     @ManyToOne
     @JoinColumn(name = "dept_id", nullable = false)
     private Department department;
+    
+    @ManyToOne
+    @JoinColumn(name = "selected_supplier_id")
+    private Supplier supplier;
 
     @Column(name = "description", nullable = false)
     private String description;
@@ -135,6 +139,14 @@ public class PurchaseRequest {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Supplier getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
     }
 
     @PrePersist

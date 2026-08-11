@@ -16,6 +16,10 @@ import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.repository.UserRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestService;
+import com.t5.enterpriseprocurement.entity.Supplier;
+import com.t5.enterpriseprocurement.repository.SupplierRepository;
+import com.t5.enterpriseprocurement.entity.Supplier;
+import com.t5.enterpriseprocurement.repository.SupplierRepository;
 
 @Service
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
@@ -23,17 +27,25 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final SupplierRepository supplierRepository;
 
     public PurchaseRequestServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
             DepartmentRepository departmentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            SupplierRepository supplierRepository) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
+        this.supplierRepository = supplierRepository;
     }
 
+
+    @Override
+    public PurchaseRequestResponseDTO rejectRequest(Integer requestId) {
+        return null;
+    }
     @Override
     public PurchaseRequestResponseDTO createPurchaseRequest(PurchaseRequestDTO requestDTO) {
 
@@ -59,6 +71,53 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         return convertToResponse(savedRequest);
     }
+    
+    @Override
+    public PurchaseRequestResponseDTO submitRequest(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        if (!"DRAFT".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Only DRAFT requests can be submitted.");
+        }
+
+        request.setStatus("PENDING_MANAGER_APPROVAL");
+
+        PurchaseRequest updatedRequest =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(updatedRequest);
+    }
+    
+    @Override
+    public PurchaseRequestResponseDTO selectSupplier(
+            Integer requestId,
+            Integer supplierId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() ->
+                        new RuntimeException("Supplier not found"));
+
+        if (!"APPROVED".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Purchase Request is not approved");
+        }
+
+        request.setSupplier(supplier);
+        request.setStatus("VENDOR_SELECTED");
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(updated);
+    }
 
     @Override
     public List<PurchaseRequestResponseDTO> getAllPurchaseRequests() {
@@ -77,6 +136,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         return convertToResponse(request);
     }
+    
 
     @Override
     public PurchaseRequestResponseDTO updatePurchaseRequest(
@@ -109,6 +169,66 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         purchaseRequestRepository.delete(request);
     }
+    
+    @Override
+    public PurchaseRequestResponseDTO managerApprove(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        if (!"PENDING_MANAGER_APPROVAL".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Request is not awaiting manager approval");
+        }
+
+        request.setStatus("PENDING_FINANCE_APPROVAL");
+
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(savedRequest);
+    }
+    
+    @Override
+    public PurchaseRequestResponseDTO procurementApprove(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        if (!"PENDING_PROCUREMENT_APPROVAL".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Request is not awaiting owner approval");
+        }
+
+        request.setStatus("APPROVED");
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(updated);
+    }
+    
+    @Override
+    public PurchaseRequestResponseDTO financeApprove(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        if (!"PENDING_FINANCE_APPROVAL".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Request is not awaiting finance approval");
+        }
+
+        request.setStatus("PENDING_PROCUREMENT_APPROVAL");
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(updated);
+    }
 
     private String generateRequestNumber() {
 
@@ -133,6 +253,11 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         response.setDepartmentName(request.getDepartment().getDeptName());
         response.setCreatedBy(request.getUser().getName());
         response.setCreatedAt(request.getCreatedAt());
+        
+        if (request.getSupplier() != null) {
+            response.setSupplierName(
+                    request.getSupplier().getSupplierName());
+        }
 
         return response;
     }

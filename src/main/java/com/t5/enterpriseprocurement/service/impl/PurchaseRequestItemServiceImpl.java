@@ -12,19 +12,24 @@ import com.t5.enterpriseprocurement.entity.PurchaseRequestItem;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestItemRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestItemService;
+import com.t5.enterpriseprocurement.entity.Supplier;
+import com.t5.enterpriseprocurement.repository.SupplierRepository;
 
 @Service
 public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemService {
 
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PurchaseRequestItemRepository purchaseRequestItemRepository;
+    private final SupplierRepository supplierRepository;
 
     public PurchaseRequestItemServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
-            PurchaseRequestItemRepository purchaseRequestItemRepository) {
+            PurchaseRequestItemRepository purchaseRequestItemRepository,
+            SupplierRepository supplierRepository) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.purchaseRequestItemRepository = purchaseRequestItemRepository;
+        this.supplierRepository = supplierRepository;
     }
 
     @Override
@@ -66,11 +71,14 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+    
+    
 
     @Override
     public PurchaseRequestItemResponseDTO updateItem(
             Integer itemId,
             PurchaseRequestItemDTO dto) {
+    	
 
         PurchaseRequestItem item = purchaseRequestItemRepository
                 .findById(itemId)
@@ -101,6 +109,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
 
     private PurchaseRequestItemResponseDTO convertToResponse(
             PurchaseRequestItem item) {
+    	
 
         PurchaseRequestItemResponseDTO response =
                 new PurchaseRequestItemResponseDTO();

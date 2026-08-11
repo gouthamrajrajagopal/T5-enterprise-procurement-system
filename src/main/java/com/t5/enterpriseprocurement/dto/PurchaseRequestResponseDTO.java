@@ -25,6 +25,8 @@ public class PurchaseRequestResponseDTO {
 
     private LocalDateTime createdAt;
 
+    private String supplierName;
+
     public PurchaseRequestResponseDTO() {
     }
 
@@ -102,6 +104,14 @@ public class PurchaseRequestResponseDTO {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+    
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

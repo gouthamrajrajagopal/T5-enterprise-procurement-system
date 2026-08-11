@@ -1,5 +1,6 @@
 package com.t5.enterpriseprocurement.controller;
 
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -51,6 +52,49 @@ public class PurchaseRequestController {
         return purchaseRequestService.updatePurchaseRequest(
                 requestId,
                 requestDTO);
+    }
+    
+    @PutMapping("/{requestId}/submit")
+    public ResponseEntity<PurchaseRequestResponseDTO> submitRequest(
+            @PathVariable Integer requestId) {
+
+        PurchaseRequestResponseDTO response =
+                purchaseRequestService.submitRequest(requestId);
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @PutMapping("/{id}/manager-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> managerApprove(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+                purchaseRequestService.managerApprove(id));
+    }
+    
+    @PutMapping("/{id}/finance-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> financeApprove(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+                purchaseRequestService.financeApprove(id));
+    }
+    
+    @PutMapping("/{id}/procurement-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> ownerApprove(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+        		purchaseRequestService.procurementApprove(id));
+    }
+    
+    @PutMapping("/{requestId}/select-supplier/{supplierId}")
+    public ResponseEntity<PurchaseRequestResponseDTO> selectSupplier(
+            @PathVariable Integer requestId,
+            @PathVariable Integer supplierId) {
+
+        return ResponseEntity.ok(
+                purchaseRequestService.selectSupplier(requestId, supplierId));
     }
 
     @DeleteMapping("/{requestId}")

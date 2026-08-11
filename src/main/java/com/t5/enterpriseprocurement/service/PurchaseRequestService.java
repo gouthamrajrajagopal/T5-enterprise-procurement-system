@@ -17,4 +17,19 @@ public interface PurchaseRequestService {
                                                      PurchaseRequestDTO requestDTO);
 
     void deletePurchaseRequest(Integer requestId);
+    PurchaseRequestResponseDTO submitRequest(Integer requestId);
+
+    PurchaseRequestResponseDTO managerApprove(Integer requestId);
+
+    PurchaseRequestResponseDTO financeApprove(Integer requestId);
+
+    PurchaseRequestResponseDTO procurementApprove(Integer requestId);
+    
+    PurchaseRequestResponseDTO selectSupplier(
+            Integer requestId,
+            Integer supplierId);
+
+    PurchaseRequestResponseDTO rejectRequest(Integer requestId);
+    
+    
 }
