@@ -81,7 +81,7 @@ public class PurchaseRequestController {
     }
     
     @PutMapping("/{id}/procurement-approve")
-    public ResponseEntity<PurchaseRequestResponseDTO> ownerApprove(
+    public ResponseEntity<PurchaseRequestResponseDTO> procurementApprove(
             @PathVariable Integer id) {
 
         return ResponseEntity.ok(
