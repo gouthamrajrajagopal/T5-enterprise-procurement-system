@@ -5,7 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.util.List;
+import com.t5.enterpriseprocurement.dto.SupplierPerformanceDTO;
 import com.t5.enterpriseprocurement.dto.SpendAnalysisDTO;
 import com.t5.enterpriseprocurement.service.ReportService;
 
@@ -27,6 +28,14 @@ public class ReportController {
 
     }
     
+    @GetMapping("/suppliers")
+    public ResponseEntity<List<SupplierPerformanceDTO>> getSupplierPerformance() {
+
+        return ResponseEntity.ok(
+                reportService.getSupplierPerformance());
+
+    }
+    
     @GetMapping("/departments")
     public ResponseEntity<List<DepartmentReportDTO>> getDepartmentReport() {
 
@@ -34,4 +43,5 @@ public class ReportController {
                 reportService.getDepartmentReport());
 
     }
+    
 }
