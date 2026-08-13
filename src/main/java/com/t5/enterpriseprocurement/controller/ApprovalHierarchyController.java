@@ -2,7 +2,6 @@ package com.t5.enterpriseprocurement.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.entity.ApprovalHierarchy;
@@ -12,8 +11,11 @@ import com.t5.enterpriseprocurement.service.ApprovalHierarchyService;
 @RequestMapping("/approval-hierarchy")
 public class ApprovalHierarchyController {
 
-    @Autowired
-    private ApprovalHierarchyService approvalHierarchyService;
+    private final ApprovalHierarchyService approvalHierarchyService;
+
+    ApprovalHierarchyController(ApprovalHierarchyService approvalHierarchyService) {
+        this.approvalHierarchyService = approvalHierarchyService;
+    }
 
     @PostMapping
     public ApprovalHierarchy saveApprovalHierarchy(

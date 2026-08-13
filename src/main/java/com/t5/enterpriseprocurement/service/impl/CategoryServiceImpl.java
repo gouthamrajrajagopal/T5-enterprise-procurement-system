@@ -1,10 +1,7 @@
 package com.t5.enterpriseprocurement.service.impl;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.t5.enterpriseprocurement.entity.Category;
 import com.t5.enterpriseprocurement.repository.CategoryRepository;
 import com.t5.enterpriseprocurement.service.CategoryService;
@@ -12,8 +9,11 @@ import com.t5.enterpriseprocurement.service.CategoryService;
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+
+    CategoryServiceImpl(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
 
     @Override
     public Category saveCategory(Category category) {

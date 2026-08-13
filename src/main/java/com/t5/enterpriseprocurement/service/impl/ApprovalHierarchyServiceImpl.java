@@ -1,8 +1,6 @@
 package com.t5.enterpriseprocurement.service.impl;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.t5.enterpriseprocurement.entity.ApprovalHierarchy;
@@ -12,8 +10,11 @@ import com.t5.enterpriseprocurement.service.ApprovalHierarchyService;
 @Service
 public class ApprovalHierarchyServiceImpl implements ApprovalHierarchyService {
 
-    @Autowired
-    private ApprovalHierarchyRepository approvalHierarchyRepository;
+    private final ApprovalHierarchyRepository approvalHierarchyRepository;
+
+    ApprovalHierarchyServiceImpl(ApprovalHierarchyRepository approvalHierarchyRepository) {
+        this.approvalHierarchyRepository = approvalHierarchyRepository;
+    }
 
     @Override
     public ApprovalHierarchy saveApprovalHierarchy(ApprovalHierarchy approvalHierarchy) {

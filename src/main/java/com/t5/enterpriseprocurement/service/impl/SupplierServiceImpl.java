@@ -1,10 +1,7 @@
 package com.t5.enterpriseprocurement.service.impl;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.repository.SupplierRepository;
 import com.t5.enterpriseprocurement.service.SupplierService;
@@ -12,8 +9,11 @@ import com.t5.enterpriseprocurement.service.SupplierService;
 @Service
 public class SupplierServiceImpl implements SupplierService {
 
-    @Autowired
-    private SupplierRepository supplierRepository;
+    private final SupplierRepository supplierRepository;
+
+    SupplierServiceImpl(SupplierRepository supplierRepository) {
+        this.supplierRepository = supplierRepository;
+    }
 
     @Override
     public Supplier saveSupplier(Supplier supplier) {

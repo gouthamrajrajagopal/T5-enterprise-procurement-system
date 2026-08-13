@@ -2,7 +2,6 @@ package com.t5.enterpriseprocurement.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.entity.SupplierCompliance;
@@ -12,8 +11,11 @@ import com.t5.enterpriseprocurement.service.SupplierComplianceService;
 @RequestMapping("/supplier-compliance")
 public class SupplierComplianceController {
 
-    @Autowired
-    private SupplierComplianceService supplierComplianceService;
+    private final SupplierComplianceService supplierComplianceService;
+
+    SupplierComplianceController(SupplierComplianceService supplierComplianceService) {
+        this.supplierComplianceService = supplierComplianceService;
+    }
 
     @PostMapping
     public SupplierCompliance saveCompliance(

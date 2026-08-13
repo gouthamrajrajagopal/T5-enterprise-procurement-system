@@ -11,22 +11,15 @@ import com.t5.enterpriseprocurement.service.ReportService;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.repository.SupplierRepository;
-import java.util.ArrayList;
-import java.util.List;
 import com.t5.enterpriseprocurement.entity.Department;
 import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseOrderRepository;
-import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
-import java.math.BigDecimal;
 import com.t5.enterpriseprocurement.dto.MonthlyReportDTO;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
 import com.t5.enterpriseprocurement.util.ExcelGenerator;
 import com.t5.enterpriseprocurement.util.PdfGenerator;
-import java.io.IOException;
 
 @Service
 public class ReportServiceImpl implements ReportService {

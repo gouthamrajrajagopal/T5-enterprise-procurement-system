@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
-
+import com.t5.enterpriseprocurement.exception.ResourceNotFoundException;
 import com.t5.enterpriseprocurement.dto.PurchaseRequestDTO;
 import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
 import com.t5.enterpriseprocurement.entity.Department;
@@ -18,9 +17,8 @@ import com.t5.enterpriseprocurement.repository.UserRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestService;
 import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.repository.SupplierRepository;
-import com.t5.enterpriseprocurement.entity.Supplier;
-import com.t5.enterpriseprocurement.repository.SupplierRepository;
-
+import com.t5.enterpriseprocurement.audit.AuditService;
+import com.t5.enterpriseprocurement.exception.BadRequestException;
 @Service
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
@@ -28,20 +26,42 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final SupplierRepository supplierRepository;
+    private final AuditService auditService;
 
     public PurchaseRequestServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
             DepartmentRepository departmentRepository,
             UserRepository userRepository,
-            SupplierRepository supplierRepository) {
+            SupplierRepository supplierRepository,
+            AuditService auditService) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
         this.supplierRepository = supplierRepository;
+        this.auditService = auditService;
     }
 
+    @Override
+    public PurchaseRequestResponseDTO managerApprove(Integer requestId) {
 
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Purchase Request not found"));
+
+        if (!"PENDING_MANAGER_APPROVAL".equals(request.getStatus())) {
+            throw new BadRequestException(
+                    "Request is not awaiting manager approval");
+        }
+
+        request.setStatus("PENDING_FINANCE_APPROVAL");
+
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        return convertToResponse(savedRequest);
+    }
+    
     @Override
     public PurchaseRequestResponseDTO rejectRequest(Integer requestId) {
         return null;
@@ -50,11 +70,11 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     public PurchaseRequestResponseDTO createPurchaseRequest(PurchaseRequestDTO requestDTO) {
 
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Department not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
 
         // Temporary until JWT integration
         User user = userRepository.findById(3)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         PurchaseRequest purchaseRequest = new PurchaseRequest();
 
@@ -68,6 +88,11 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest savedRequest =
                 purchaseRequestRepository.save(purchaseRequest);
+
+        auditService.log(
+                user.getName(),
+                "Created Purchase Request",
+                "Purchase Request");
 
         return convertToResponse(savedRequest);
     }
@@ -88,6 +113,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest updatedRequest =
                 purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Submitted Purchase Request",
+                "Purchase Request");
 
         return convertToResponse(updatedRequest);
     }
@@ -115,7 +144,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest updated =
                 purchaseRequestRepository.save(request);
-
+        auditService.log(
+                request.getUser().getName(),
+                "Manager Approved Purchase Request",
+                "Approval");
         return convertToResponse(updated);
     }
 
@@ -132,7 +164,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     public PurchaseRequestResponseDTO getPurchaseRequestById(Integer requestId) {
 
         PurchaseRequest request = purchaseRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
 
         return convertToResponse(request);
     }
@@ -144,10 +176,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
             PurchaseRequestDTO requestDTO) {
 
         PurchaseRequest request = purchaseRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
 
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Department not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
 
         request.setDepartment(department);
         request.setDescription(requestDTO.getDescription());
@@ -157,7 +189,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest updated =
                 purchaseRequestRepository.save(request);
-
+        auditService.log(
+                request.getUser().getName(),
+                "Finance Approved Purchase Request",
+                "Approval");
         return convertToResponse(updated);
     }
 
@@ -165,31 +200,15 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     public void deletePurchaseRequest(Integer requestId) {
 
         PurchaseRequest request = purchaseRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("Purchase Request not found."));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
+        auditService.log(
+                request.getUser().getName(),
+                "Deleted Purchase Request",
+                "Purchase Request");
         purchaseRequestRepository.delete(request);
     }
     
-    @Override
-    public PurchaseRequestResponseDTO managerApprove(Integer requestId) {
-
-        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
-                .orElseThrow(() ->
-                        new RuntimeException("Purchase Request not found"));
-
-        if (!"PENDING_MANAGER_APPROVAL".equals(request.getStatus())) {
-            throw new RuntimeException(
-                    "Request is not awaiting manager approval");
-        }
-
-        request.setStatus("PENDING_FINANCE_APPROVAL");
-
-        PurchaseRequest savedRequest =
-                purchaseRequestRepository.save(request);
-
-        return convertToResponse(savedRequest);
-    }
-    
+ 
     @Override
     public PurchaseRequestResponseDTO procurementApprove(Integer requestId) {
 
@@ -206,7 +225,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest updated =
                 purchaseRequestRepository.save(request);
-
+        auditService.log(
+                request.getUser().getName(),
+                "Procurement Approved Purchase Request",
+                "Approval");
         return convertToResponse(updated);
     }
     
@@ -226,7 +248,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest updated =
                 purchaseRequestRepository.save(request);
-
+        auditService.log(
+                request.getUser().getName(),
+                "Supplier Selected",
+                "Supplier");
         return convertToResponse(updated);
     }
 

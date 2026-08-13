@@ -2,9 +2,9 @@ package com.t5.enterpriseprocurement.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import com.t5.enterpriseprocurement.audit.AuditService;
 import org.springframework.stereotype.Service;
-
+import com.t5.enterpriseprocurement.exception.ResourceNotFoundException;
 import com.t5.enterpriseprocurement.dto.PurchaseRequestItemDTO;
 import com.t5.enterpriseprocurement.dto.PurchaseRequestItemResponseDTO;
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
@@ -12,7 +12,6 @@ import com.t5.enterpriseprocurement.entity.PurchaseRequestItem;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestItemRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestItemService;
-import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.repository.SupplierRepository;
 
 @Service
@@ -20,16 +19,16 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
 
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PurchaseRequestItemRepository purchaseRequestItemRepository;
-    private final SupplierRepository supplierRepository;
-
+    private final AuditService auditService;
+    
     public PurchaseRequestItemServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
             PurchaseRequestItemRepository purchaseRequestItemRepository,
-            SupplierRepository supplierRepository) {
-
+            SupplierRepository supplierRepository,
+            AuditService auditService) {
+    	this.auditService = auditService;
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.purchaseRequestItemRepository = purchaseRequestItemRepository;
-        this.supplierRepository = supplierRepository;
     }
 
     @Override
@@ -40,8 +39,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
         PurchaseRequest purchaseRequest = purchaseRequestRepository
                 .findById(requestId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Purchase Request not found"));
-
+                new ResourceNotFoundException("Purchase Request not found."));
         PurchaseRequestItem item = new PurchaseRequestItem();
 
         item.setPurchaseRequest(purchaseRequest);
@@ -63,7 +61,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
         PurchaseRequest purchaseRequest = purchaseRequestRepository
                 .findById(requestId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Purchase Request not found"));
+                new ResourceNotFoundException("Purchase Request not found."));
 
         return purchaseRequestItemRepository
                 .findByPurchaseRequest(purchaseRequest)
@@ -83,7 +81,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
         PurchaseRequestItem item = purchaseRequestItemRepository
                 .findById(itemId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Purchase Request Item not found"));
+                new ResourceNotFoundException("Purchase Request not found."));
 
         item.setItemName(dto.getItemName());
         item.setDescription(dto.getDescription());
@@ -102,7 +100,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
         PurchaseRequestItem item = purchaseRequestItemRepository
                 .findById(itemId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Purchase Request Item not found"));
+                new ResourceNotFoundException("Purchase Request not found."));
 
         purchaseRequestItemRepository.delete(item);
     }
