@@ -2,6 +2,10 @@ package com.t5.enterpriseprocurement.repository;
 import java.math.BigDecimal;
 import java.math.BigDecimal;
 
+import java.math.BigDecimal;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
@@ -18,5 +22,21 @@ public interface PurchaseOrderRepository
     Optional<PurchaseOrder> findByPoNumber(String poNumber);
 
     boolean existsByPurchaseRequestRequestId(Integer requestId);
+    
+    @Query("""
+    		SELECT COUNT(po)
+    		FROM PurchaseOrder po
+    		WHERE po.purchaseRequest.department.deptId = :deptId
+    		""")
+    		Long countPurchaseOrdersByDepartment(
+    		        @Param("deptId") Integer deptId);
+    
+    @Query("""
+    		SELECT COALESCE(SUM(po.totalAmount),0)
+    		FROM PurchaseOrder po
+    		WHERE po.purchaseRequest.department.deptId = :deptId
+    		""")
+    		BigDecimal getDepartmentSpend(
+    		        @Param("deptId") Integer deptId);
 
 }

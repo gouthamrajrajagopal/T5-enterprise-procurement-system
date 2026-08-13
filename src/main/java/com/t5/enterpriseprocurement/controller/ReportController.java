@@ -1,5 +1,6 @@
 package com.t5.enterpriseprocurement.controller;
-
+import java.util.List;
+import com.t5.enterpriseprocurement.dto.DepartmentReportDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,14 @@ public class ReportController {
 
         return ResponseEntity.ok(
                 reportService.getSpendAnalysis());
+
+    }
+    
+    @GetMapping("/departments")
+    public ResponseEntity<List<DepartmentReportDTO>> getDepartmentReport() {
+
+        return ResponseEntity.ok(
+                reportService.getDepartmentReport());
 
     }
 }
