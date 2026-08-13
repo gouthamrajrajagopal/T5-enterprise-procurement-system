@@ -24,6 +24,9 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import com.t5.enterpriseprocurement.util.ExcelGenerator;
+import com.t5.enterpriseprocurement.util.PdfGenerator;
+import java.io.IOException;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -45,6 +48,26 @@ public class ReportServiceImpl implements ReportService {
 	    this.supplierRepository = supplierRepository;
 	}
 	
+	@Override
+	public byte[] exportPdf() {
+
+	    try {
+	        return PdfGenerator.generatePdf().readAllBytes();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Unable to generate PDF", e);
+	    }
+	}
+	
+	@Override
+	public byte[] exportExcel() {
+
+	    try {
+	        return ExcelGenerator.generateExcel().readAllBytes();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Unable to generate Excel", e);
+	    }
+
+	}
 	
 	@Override
 	public List<DepartmentReportDTO> getDepartmentReport() {
