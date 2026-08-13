@@ -9,6 +9,8 @@ import java.util.List;
 import com.t5.enterpriseprocurement.dto.SupplierPerformanceDTO;
 import com.t5.enterpriseprocurement.dto.SpendAnalysisDTO;
 import com.t5.enterpriseprocurement.service.ReportService;
+import com.t5.enterpriseprocurement.dto.MonthlyReportDTO;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reports")
@@ -42,6 +44,14 @@ public class ReportController {
         return ResponseEntity.ok(
                 reportService.getDepartmentReport());
 
+    }
+    
+    @GetMapping("/monthly")
+    public ResponseEntity<List<MonthlyReportDTO>> getMonthlyReport() {
+
+        return ResponseEntity.ok(
+                reportService.getMonthlyReport()
+        );
     }
     
 }

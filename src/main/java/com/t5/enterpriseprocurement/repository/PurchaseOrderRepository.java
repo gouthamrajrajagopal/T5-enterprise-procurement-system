@@ -46,8 +46,26 @@ public interface PurchaseOrderRepository
     		""")
     		BigDecimal getSupplierBusiness(@Param("supplierId") Integer supplierId);
     
+    @Query("""
+    		SELECT COUNT(po)
+    		FROM PurchaseOrder po
+    		WHERE FUNCTION('YEAR', po.createdAt) = :year
+    		AND FUNCTION('MONTH', po.createdAt) = :month
+    		""")
+    		Long countMonthlyPurchaseOrders(
+    		        @Param("year") int year,
+    		        @Param("month") int month);
     
-
+    @Query("""
+    		SELECT COALESCE(SUM(po.totalAmount),0)
+    		FROM PurchaseOrder po
+    		WHERE FUNCTION('YEAR', po.createdAt) = :year
+    		AND FUNCTION('MONTH', po.createdAt) = :month
+    		""")
+    		BigDecimal getMonthlySpend(
+    		        @Param("year") int year,
+    		        @Param("month") int month);
+    
     @Query("""
     		SELECT COUNT(po)
     		FROM PurchaseOrder po

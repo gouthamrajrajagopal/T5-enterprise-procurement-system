@@ -18,9 +18,12 @@ import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseOrderRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import java.math.BigDecimal;
-
+import com.t5.enterpriseprocurement.dto.MonthlyReportDTO;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
+import java.util.Locale;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -95,6 +98,47 @@ public class ReportServiceImpl implements ReportService {
         response.setTotalPurchaseOrders(2L);
 
         return response;
+    }
+    
+    @Override
+    public List<MonthlyReportDTO> getMonthlyReport() {
+
+        List<MonthlyReportDTO> report = new ArrayList<>();
+
+        LocalDate today = LocalDate.now();
+
+        int year = today.getYear();
+        int month = today.getMonthValue();
+
+        Long purchaseOrders =
+                purchaseOrderRepository.countMonthlyPurchaseOrders(
+                        year,
+                        month);
+
+        if (purchaseOrders == null) {
+            purchaseOrders = 0L;
+        }
+
+        BigDecimal totalSpend =
+                purchaseOrderRepository.getMonthlySpend(
+                        year,
+                        month);
+
+        if (totalSpend == null) {
+            totalSpend = BigDecimal.ZERO;
+        }
+
+        String monthName =
+                today.getMonth()
+                        .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+        report.add(
+                new MonthlyReportDTO(
+                        monthName + " " + year,
+                        purchaseOrders,
+                        totalSpend));
+
+        return report;
     }
     
     @Override
