@@ -15,6 +15,7 @@ import com.t5.enterpriseprocurement.entity.Department;
 import com.t5.enterpriseprocurement.entity.Role;
 import com.t5.enterpriseprocurement.entity.User;
 import com.t5.enterpriseprocurement.util.JwtUtil;
+import com.t5.enterpriseprocurement.service.EmailService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -23,19 +24,22 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
             PasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            EmailService emailService) {
 
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
 
     @Override
@@ -63,6 +67,8 @@ public class AuthServiceImpl implements AuthService {
     	user.setStatus("ACTIVE");
     	user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
     	User savedUser = userRepository.save(user);
+    	
+    	emailService.sendRegistrationEmail(savedUser);
 
     	return new RegisterResponseDTO(
     	        savedUser.getUserId(),

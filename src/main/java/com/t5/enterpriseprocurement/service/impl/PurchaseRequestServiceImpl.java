@@ -19,6 +19,10 @@ import com.t5.enterpriseprocurement.entity.Supplier;
 import com.t5.enterpriseprocurement.repository.SupplierRepository;
 import com.t5.enterpriseprocurement.audit.AuditService;
 import com.t5.enterpriseprocurement.exception.BadRequestException;
+import com.t5.enterpriseprocurement.service.EmailService;
+import com.t5.enterpriseprocurement.repository.RoleRepository;
+import com.t5.enterpriseprocurement.entity.Role;
+import com.t5.enterpriseprocurement.entity.User;
 @Service
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
@@ -27,19 +31,25 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final UserRepository userRepository;
     private final SupplierRepository supplierRepository;
     private final AuditService auditService;
+    private final EmailService emailService;
+    private final RoleRepository roleRepository;
 
     public PurchaseRequestServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
             DepartmentRepository departmentRepository,
             UserRepository userRepository,
             SupplierRepository supplierRepository,
-            AuditService auditService) {
+            AuditService auditService,
+            EmailService emailService,
+            RoleRepository roleRepository) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
         this.supplierRepository = supplierRepository;
         this.auditService = auditService;
+        this.emailService = emailService;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -58,6 +68,23 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         PurchaseRequest savedRequest =
                 purchaseRequestRepository.save(request);
+
+        auditService.log(
+                request.getUser().getName(),
+                "Manager Approved Purchase Request",
+                "Approval");
+
+        Role financeRole = roleRepository
+                .findByRoleName("FINANCE")
+                .orElseThrow(() -> new RuntimeException("Finance role not found"));
+
+        User financeManager = userRepository
+                .findByRole(financeRole)
+                .orElseThrow(() -> new RuntimeException("Finance Manager not found"));
+
+        emailService.sendManagerApprovalEmail(
+                financeManager,
+                savedRequest);
 
         return convertToResponse(savedRequest);
     }
@@ -117,6 +144,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 request.getUser().getName(),
                 "Submitted Purchase Request",
                 "Purchase Request");
+        
+        emailService.sendPurchaseSubmissionEmail(
+                request.getUser(),
+                updatedRequest);
 
         return convertToResponse(updatedRequest);
     }
@@ -229,6 +260,9 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 request.getUser().getName(),
                 "Procurement Approved Purchase Request",
                 "Approval");
+        emailService.sendProcurementApprovalEmail(
+                request.getUser(),
+                updated);
         return convertToResponse(updated);
     }
     
@@ -250,8 +284,20 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 purchaseRequestRepository.save(request);
         auditService.log(
                 request.getUser().getName(),
-                "Supplier Selected",
-                "Supplier");
+                "Finance Approved Purchase Request",
+                "Approval");
+        
+        Role procurementRole = roleRepository
+                .findByRoleName("PROCUREMENT")
+                .orElseThrow(() -> new RuntimeException("Procurement role not found"));
+
+        User procurementManager = userRepository
+                .findByRole(procurementRole)
+                .orElseThrow(() -> new RuntimeException("Procurement Manager not found"));
+
+        emailService.sendFinanceApprovalEmail(
+                procurementManager,
+                updated);
         return convertToResponse(updated);
     }
 
