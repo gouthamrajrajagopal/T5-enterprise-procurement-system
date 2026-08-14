@@ -44,20 +44,18 @@ public class AuthServiceImpl implements AuthService {
     	    throw new IllegalArgumentException("Email already exists.");
     	}
 
-    	Role role = roleRepository.findByRoleName("EMPLOYEE")
-    	        .orElseThrow(() ->
-    	                new IllegalArgumentException("Default role EMPLOYEE not found."));
+    	Role role = roleRepository.findById(request.getRoleId())
+    	        .orElseThrow(() -> new RuntimeException("Role not found"));
 
     	Department department = departmentRepository.findById(request.getDepartmentId())
     	        .orElseThrow(() ->
     	                new IllegalArgumentException("Department not found."));
+
     	User user = new User();
 
     	user.setName(request.getName());
     	user.setEmail(request.getEmail());
     	user.setPhone(request.getPhone());
-
-    	
 
     	user.setRole(role);
     	user.setDepartment(department);

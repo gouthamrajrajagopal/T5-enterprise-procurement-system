@@ -1,16 +1,34 @@
 package com.t5.enterpriseprocurement.exception;
 
 import java.time.LocalDateTime;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	
+	
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+	        AccessDeniedException ex,
+	        HttpServletRequest request) {
+
+	    ApiErrorResponse error = new ApiErrorResponse(
+	            LocalDateTime.now(),
+	            HttpStatus.FORBIDDEN.value(),
+	            "Forbidden",
+	            ex.getMessage(),
+	            request.getRequestURI());
+
+	    return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+	}
+	
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
@@ -57,5 +75,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 
 }

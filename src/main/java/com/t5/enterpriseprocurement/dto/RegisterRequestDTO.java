@@ -7,17 +7,23 @@ public class RegisterRequestDTO {
     private String password;
     private String phone;
     private Integer departmentId;
+    private Integer roleId;
 
     public RegisterRequestDTO() {
     }
 
-    public RegisterRequestDTO(String name, String email, String password,
-                              String phone, Integer departmentId) {
+    public RegisterRequestDTO(String name,
+                              String email,
+                              String password,
+                              String phone,
+                              Integer departmentId,
+                              Integer roleId) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
         this.departmentId = departmentId;
+        this.roleId = roleId;
     }
 
     public String getName() {
@@ -60,11 +66,20 @@ public class RegisterRequestDTO {
         this.departmentId = departmentId;
     }
 
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
+    }
+
     @Override
     public String toString() {
         return "RegisterRequestDTO [name=" + name +
                 ", email=" + email +
                 ", phone=" + phone +
-                ", departmentId=" + departmentId + "]";
+                ", departmentId=" + departmentId +
+                ", roleId=" + roleId + "]";
     }
 }

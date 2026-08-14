@@ -1,5 +1,5 @@
 package com.t5.enterpriseprocurement.controller;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -22,6 +22,7 @@ public class PurchaseRequestController {
         this.purchaseRequestService = purchaseRequestService;
     }
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PurchaseRequestResponseDTO createPurchaseRequest(
@@ -54,6 +55,7 @@ public class PurchaseRequestController {
                 requestDTO);
     }
     
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{requestId}/submit")
     public ResponseEntity<PurchaseRequestResponseDTO> submitRequest(
             @PathVariable Integer requestId) {
@@ -64,6 +66,7 @@ public class PurchaseRequestController {
         return ResponseEntity.ok(response);
     }
     
+    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}/manager-approve")
     public ResponseEntity<PurchaseRequestResponseDTO> managerApprove(
             @PathVariable Integer id) {
@@ -72,6 +75,7 @@ public class PurchaseRequestController {
                 purchaseRequestService.managerApprove(id));
     }
     
+    @PreAuthorize("hasRole('FINANCE')")
     @PutMapping("/{id}/finance-approve")
     public ResponseEntity<PurchaseRequestResponseDTO> financeApprove(
             @PathVariable Integer id) {
@@ -80,6 +84,7 @@ public class PurchaseRequestController {
                 purchaseRequestService.financeApprove(id));
     }
     
+    @PreAuthorize("hasRole('PROCUREMENT')")
     @PutMapping("/{id}/procurement-approve")
     public ResponseEntity<PurchaseRequestResponseDTO> procurementApprove(
             @PathVariable Integer id) {
@@ -88,6 +93,7 @@ public class PurchaseRequestController {
         		purchaseRequestService.procurementApprove(id));
     }
     
+    @PreAuthorize("hasRole('PROCUREMENT')")
     @PutMapping("/{requestId}/select-supplier/{supplierId}")
     public ResponseEntity<PurchaseRequestResponseDTO> selectSupplier(
             @PathVariable Integer requestId,
@@ -96,7 +102,8 @@ public class PurchaseRequestController {
         return ResponseEntity.ok(
                 purchaseRequestService.selectSupplier(requestId, supplierId));
     }
-
+    
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{requestId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePurchaseRequest(
