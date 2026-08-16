@@ -1,305 +1,304 @@
-# Enterprise Procurement System
+# Development of Smart Procurement and Purchase Order Management System
 
-A full-stack Enterprise Procurement Management System built using **Spring Boot**, **MySQL**, **Spring Security (JWT)**, and **REST APIs**. The system streamlines the complete procurement lifecycle from purchase request creation to final approval with role-based access control, audit logging, reporting, and automated email notifications.
+## ProcureFlow
 
----
+ProcureFlow is a full-stack procurement platform designed to digitize
+and streamline the procurement lifecycle, from purchase request creation
+and multi-level approvals to supplier selection and purchase-order
+generation.
 
-## Features
+------------------------------------------------------------------------
 
-### Authentication & Security
-- JWT-based Authentication
-- Role-Based Authorization
-- Secure REST APIs using Spring Security
-- Protected Endpoints with Method-Level Security
+## Overview
 
-### Procurement Workflow
-- Create Purchase Requests
-- Submit Purchase Requests
-- Manager Approval
-- Finance Approval
-- Procurement Approval
-- Supplier Selection
+The system provides a centralized platform for managing enterprise
+procurement activities with:
 
-### Dashboard & Reports
-- Dashboard Summary
-- Department Procurement Reports
-- Supplier Performance Reports
-- Monthly Procurement Reports
-- Procurement Spend Analysis
-- PDF Report Export
-- Excel Report Export
+-   Role-based access control
+-   Multi-level approval workflows
+-   Supplier management and compliance
+-   Purchase-order generation
+-   Procurement reporting
+-   Audit logging
+-   Authentication and password recovery
 
-### Enterprise Features
-- Global Exception Handling
-- Audit Logging
-- Swagger / OpenAPI Documentation
-- Email Notifications
-- Validation
-- RESTful API Architecture
+------------------------------------------------------------------------
 
----
+## Procurement Workflow
 
-# Technology Stack
-
-## Backend
-
-- Java 17
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- Spring Data JPA (Hibernate)
-- Maven
-- MySQL
-- JavaMail Sender
-- Swagger / OpenAPI
-
-## Frontend (In Progress)
-
-- React
-- TypeScript
-- Vite
-- Material UI
-- Axios
-
----
-
-# Project Architecture
-
-```
-React Frontend
-        │
-        ▼
-Spring Boot REST API
-        │
-        ▼
-Spring Security (JWT)
-        │
-        ▼
-Business Services
-        │
-        ▼
-Spring Data JPA
-        │
-        ▼
-MySQL Database
-```
-
----
-
-# Procurement Workflow
-
-```
-Employee
-
-    │
-
-Create Purchase Request
-
-    │
-
-DRAFT
-
-    │
-
-Submit Request
-
-    ▼
-
-PENDING_MANAGER_APPROVAL
-
-    │
-
+``` text
+Employee Request
+       |
+       v
 Manager Approval
-
-    ▼
-
-PENDING_FINANCE_APPROVAL
-
-    │
-
+       |
+       v
 Finance Approval
-
-    ▼
-
-PENDING_PROCUREMENT_APPROVAL
-
-    │
-
+       |
+       v
 Procurement Approval
-
-    ▼
-
-APPROVED
+       |
+       v
+Supplier Selection
+       |
+       v
+Purchase Order
 ```
 
----
+------------------------------------------------------------------------
 
-# Setup Instructions
+## Technology Stack
 
-## 1. Clone Repository
+Layer             Technologies
+  ----------------- ---------------------------------------
+Frontend          React, JavaScript, Vite, React Router
+Backend           Java, Spring Boot, Spring Security
+Persistence       Spring Data JPA, Hibernate
+Database          MySQL
+Build Tools       Maven, npm
+Version Control   Git, GitHub
 
-```bash
-git clone https://github.com/<YOUR_USERNAME>/T5-enterprise-procurement-system.git
+------------------------------------------------------------------------
+
+## System Architecture
+
+``` text
++----------------------+
+|    React Frontend    |
+| Pages / Components   |
+| Routing / UI         |
++----------+-----------+
+           |
+           | REST API
+           v
++----------------------+
+|   Spring Boot API    |
+| Controllers          |
+| Services             |
+| DTOs                 |
+| Security             |
+| Repositories         |
++----------+-----------+
+           |
+           | JPA / Hibernate
+           v
++----------------------+
+|        MySQL         |
+| Users                |
+| Requests             |
+| Approvals            |
+| Suppliers            |
+| Purchase Orders      |
+| Audit Logs           |
++----------------------+
 ```
 
----
+The backend follows a layered architecture that separates API handling,
+business logic, and database access.
 
-## 2. Open Project
+------------------------------------------------------------------------
 
-Open the project using:
+## User Roles
 
-- Eclipse
-- IntelliJ IDEA
+  -----------------------------------------------------------------------
+Role                                Responsibilities
+  ----------------------------------- -----------------------------------
+Employee                            Create and track purchase requests
 
----
+Manager                             Review and approve requests
 
-## 3. Create Database
+Finance                             Perform financial approval
 
-```sql
-CREATE DATABASE enterprise_procurement;
+Procurement                         Approve requests, select suppliers,
+and generate purchase orders
+
+Administrator                       Manage administrative functions,
+reports, and audit monitoring
+  -----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## Core Modules
+
+### Authentication
+
+-   Login and registration
+-   Role-based access
+-   Forgot password
+-   Password reset
+-   BCrypt password hashing
+
+### Procurement
+
+-   Purchase requests
+-   Multi-level approvals
+-   Supplier management
+-   Supplier compliance
+-   Supplier selection
+-   Purchase orders
+
+### Administration
+
+-   Dashboard
+-   Reports
+-   Audit logs
+-   Administrative configuration
+
+------------------------------------------------------------------------
+
+## Security
+
+The application implements:
+
+-   Role-based authorization
+-   Protected REST APIs
+-   BCrypt password encoding
+-   Secure password-reset tokens
+-   30-minute reset-token expiration
+-   Single-use password-reset tokens
+-   Administrator-only audit-log access
+
+------------------------------------------------------------------------
+
+## Project Structure
+
+``` text
+T5-enterprise-procurement-v1/
+|
++-- frontend/        React application
++-- src/             Spring Boot backend
++-- database/        MySQL schema and setup
++-- pom.xml          Maven configuration
++-- README.md        Project documentation
 ```
 
-Import the provided SQL schema.
+Database resources:
 
----
-
-## 4. Configure Database
-
-Update:
-
+``` text
+database/
++-- enterprise_procurement.sql
++-- README_DATABASE.md
 ```
+
+------------------------------------------------------------------------
+
+## Prerequisites
+
+Install the following before running the project:
+
+-   Java JDK
+-   Maven
+-   Node.js and npm
+-   MySQL
+-   Git
+
+------------------------------------------------------------------------
+
+## Setup
+
+### 1. Clone the Repository
+
+``` bash
+git clone <repository-url>
+cd T5-enterprise-procurement-v1
+```
+
+### 2. Configure the Database
+
+Import:
+
+``` text
+database/enterprise_procurement.sql
+```
+
+Refer to:
+
+``` text
+database/README_DATABASE.md
+```
+
+for project-specific database instructions.
+
+Configure the local database connection in:
+
+``` text
 src/main/resources/application.properties
 ```
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/enterprise_procurement
-spring.datasource.username=root
-spring.datasource.password=YOUR_PASSWORD
+Do not commit real passwords, API keys, or other sensitive credentials.
+
+### 3. Start the Backend
+
+From the project root:
+
+``` bash
+mvn spring-boot:run
 ```
 
----
+Alternatively, run the Spring Boot application from an IDE.
 
-## 5. Configure Email
+### 4. Start the Frontend
 
-```properties
-spring.mail.username=YOUR_EMAIL@gmail.com
-spring.mail.password=YOUR_APP_PASSWORD
+``` bash
+cd frontend
+npm install
+npm run dev
 ```
 
----
+### 5. Build and Validate
 
-## 6. Run Application
+Frontend:
 
-Using Maven Wrapper:
-
-```bash
-./mvnw spring-boot:run
+``` bash
+npm run build
+npm run lint
 ```
 
-or from Eclipse.
+Backend:
 
----
-
-# Swagger
-
-After running the application:
-
-```
-http://localhost:8080/swagger-ui/index.html
+``` bash
+mvn clean package
 ```
 
----
+------------------------------------------------------------------------
 
-# API Modules
+## Project Status
 
-## Authentication
+### Final Internship Presentation Version
 
-- Register User
-- Login User
+The major authentication, procurement, approval, supplier,
+purchase-order, reporting, audit, and security modules have been
+implemented and tested.
 
-## Dashboard
+The completed project is maintained in the `final-project` Git branch.
 
-- Dashboard Summary
+------------------------------------------------------------------------
 
-## Purchase Requests
+## Future Enhancements
 
-- Create Purchase Request
-- Submit Purchase Request
-- Update Purchase Request
-- Delete Purchase Request
-- Manager Approval
-- Finance Approval
-- Procurement Approval
+The following enhancements can be considered for future versions:
 
-## Reports
+-   Email notifications for approval and procurement status updates
+-   Docker-based deployment
+-   CI/CD pipeline integration
+-   Cloud deployment
+-   Advanced procurement analytics and dashboards
+-   Automated supplier evaluation and scoring
+-   Enhanced notification and alert management
+-   Integration with enterprise ERP and finance systems
 
-- PDF Export
-- Excel Export
-- Spend Analysis
-- Supplier Performance
-- Department Report
+------------------------------------------------------------------------
 
-## Audit Logs
+## Project Information
 
-- View Audit Logs
+**Project Title:** Development of Smart Procurement and Purchase Order
+Management System\
+**Application:** ProcureFlow\
+**Domain:** Enterprise Procurement Management\
+**Architecture:** Full-Stack Layered Architecture\
+**Frontend:** React + Vite\
+**Backend:** Java + Spring Boot\
+**Database:** MySQL\
+**Version Control:** Git + GitHub
 
----
-
-# Email Notifications
-
-The system automatically sends emails for:
-
-- User Registration
-- Purchase Request Submission
-- Manager Approval
-- Finance Approval
-- Final Procurement Approval
-
----
-
-# Security
-
-- JWT Authentication
-- Role-Based Authorization
-- Protected REST APIs
-- Method-Level Security
-- Password Encryption
-
----
-
-# Current Project Status
-
-| Module | Status |
-|----------|--------|
-| Authentication | ✅ |
-| Authorization | ✅ |
-| Purchase Workflow | ✅ |
-| Reports | ✅ |
-| Dashboard | ✅ |
-| Swagger | ✅ |
-| Audit Logging | ✅ |
-| Exception Handling | ✅ |
-| Email Notifications | ✅ |
-| Frontend | 🚧 In Progress |
-| Docker Deployment | 🚧 Planned |
-
----
-
-# Future Enhancements
-
-- React Frontend
-- Docker Deployment
-- CI/CD Pipeline
-- Cloud Deployment
-- Notification Dashboard
-- Analytics Dashboard
-
----
-
-# Author
-
-**Goutham Raj Rajagopal**
-
-Thiagarajar College of Engineering
-
-Development of Smart Procurement & Purchase Order Management System – Infosys Internship Project
+Developed as an internship project.
