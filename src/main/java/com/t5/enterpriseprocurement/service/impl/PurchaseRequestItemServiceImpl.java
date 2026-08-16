@@ -1,6 +1,7 @@
 package com.t5.enterpriseprocurement.service.impl;
 
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 import com.t5.enterpriseprocurement.audit.AuditService;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
                 .findById(requestId)
                 .orElseThrow(() ->
                 new ResourceNotFoundException("Purchase Request not found."));
+        ensureDraft(purchaseRequest);
         PurchaseRequestItem item = new PurchaseRequestItem();
 
         item.setPurchaseRequest(purchaseRequest);
@@ -50,6 +52,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
 
         PurchaseRequestItem savedItem =
                 purchaseRequestItemRepository.save(item);
+        synchronizeRequestTotals(purchaseRequest);
 
         return convertToResponse(savedItem);
     }
@@ -83,6 +86,8 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
                 .orElseThrow(() ->
                 new ResourceNotFoundException("Purchase Request not found."));
 
+        ensureDraft(item.getPurchaseRequest());
+
         item.setItemName(dto.getItemName());
         item.setDescription(dto.getDescription());
         item.setQuantity(dto.getQuantity());
@@ -90,6 +95,7 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
 
         PurchaseRequestItem updatedItem =
                 purchaseRequestItemRepository.save(item);
+        synchronizeRequestTotals(updatedItem.getPurchaseRequest());
 
         return convertToResponse(updatedItem);
     }
@@ -101,8 +107,10 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
                 .findById(itemId)
                 .orElseThrow(() ->
                 new ResourceNotFoundException("Purchase Request not found."));
-
+        PurchaseRequest request = item.getPurchaseRequest();
+        ensureDraft(request);
         purchaseRequestItemRepository.delete(item);
+        synchronizeRequestTotals(request);
     }
 
     private PurchaseRequestItemResponseDTO convertToResponse(
@@ -122,5 +130,20 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
         response.setCreatedAt(item.getCreatedAt());
 
         return response;
+    }
+
+    private void ensureDraft(PurchaseRequest request) {
+        if (!"DRAFT".equals(request.getStatus())) {
+            throw new IllegalStateException("Items can only be changed while the request is a draft.");
+        }
+    }
+
+    private void synchronizeRequestTotals(PurchaseRequest request) {
+        List<PurchaseRequestItem> items = purchaseRequestItemRepository.findByPurchaseRequest(request);
+        int quantity = items.stream().map(PurchaseRequestItem::getQuantity).filter(value -> value != null).mapToInt(Integer::intValue).sum();
+        BigDecimal amount = items.stream().map(PurchaseRequestItem::getTotalPrice).filter(value -> value != null).reduce(BigDecimal.ZERO, BigDecimal::add);
+        request.setQuantity(quantity);
+        request.setEstimatedAmount(amount);
+        purchaseRequestRepository.save(request);
     }
 }

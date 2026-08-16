@@ -39,7 +39,8 @@ public class DashboardServiceImpl implements DashboardService {
         response.setPendingRequests(
                 purchaseRequestRepository.countByStatusContaining("PENDING"));
         long approvedRequests =
-                purchaseRequestRepository.countByStatus("PO_GENERATED")
+                purchaseRequestRepository.countByStatus("APPROVED")
+              + purchaseRequestRepository.countByStatus("PO_GENERATED")
               + purchaseRequestRepository.countByStatus("VENDOR_SELECTED");
 
         response.setApprovedRequests(approvedRequests);

@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import com.t5.enterpriseprocurement.security.JwtAuthenticationFilter;
 
 @Configuration
@@ -40,7 +41,8 @@ public class SecurityConfig {
             			    "/swagger-ui/**",
             			    "/swagger-ui.html",
             			    "/v3/api-docs/**"
-            			).permitAll()
+            		).permitAll()
+				.requestMatchers(HttpMethod.GET, "/departments").permitAll()
             	    .anyRequest().authenticated()
             	)
             .httpBasic(Customizer.withDefaults())

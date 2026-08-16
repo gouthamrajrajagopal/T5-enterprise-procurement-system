@@ -45,7 +45,7 @@ public class ReportServiceImpl implements ReportService {
 	public byte[] exportPdf() {
 
 	    try {
-	        return PdfGenerator.generatePdf().readAllBytes();
+            return PdfGenerator.generatePdf(getSpendAnalysis()).readAllBytes();
 	    } catch (Exception e) {
 	        throw new RuntimeException("Unable to generate PDF", e);
 	    }
@@ -55,7 +55,7 @@ public class ReportServiceImpl implements ReportService {
 	public byte[] exportExcel() {
 
 	    try {
-	        return ExcelGenerator.generateExcel().readAllBytes();
+            return ExcelGenerator.generateExcel(getSpendAnalysis()).readAllBytes();
 	    } catch (Exception e) {
 	        throw new RuntimeException("Unable to generate Excel", e);
 	    }
@@ -107,13 +107,17 @@ public class ReportServiceImpl implements ReportService {
 
         SpendAnalysisDTO response = new SpendAnalysisDTO();
 
-        response.setTotalSpend(new BigDecimal("153250"));
-        response.setAveragePurchase(new BigDecimal("76625"));
-        response.setHighestPurchase(new BigDecimal("150000"));
-        response.setLowestPurchase(new BigDecimal("3250"));
-        response.setTotalPurchaseOrders(2L);
+        response.setTotalSpend(purchaseOrderRepository.getTotalSpend());
+        response.setAveragePurchase(defaultAmount(purchaseOrderRepository.getAverageSpend()));
+        response.setHighestPurchase(defaultAmount(purchaseOrderRepository.getHighestSpend()));
+        response.setLowestPurchase(defaultAmount(purchaseOrderRepository.getLowestSpend()));
+        response.setTotalPurchaseOrders(purchaseOrderRepository.count());
 
         return response;
+    }
+
+    private BigDecimal defaultAmount(BigDecimal amount) {
+        return amount == null ? BigDecimal.ZERO : amount;
     }
     
     @Override

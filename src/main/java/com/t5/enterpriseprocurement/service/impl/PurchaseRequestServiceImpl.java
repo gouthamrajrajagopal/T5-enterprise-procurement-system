@@ -11,6 +11,7 @@ import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
 import com.t5.enterpriseprocurement.entity.Department;
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
 import com.t5.enterpriseprocurement.entity.User;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.repository.UserRepository;
@@ -22,7 +23,6 @@ import com.t5.enterpriseprocurement.exception.BadRequestException;
 import com.t5.enterpriseprocurement.service.EmailService;
 import com.t5.enterpriseprocurement.repository.RoleRepository;
 import com.t5.enterpriseprocurement.entity.Role;
-import com.t5.enterpriseprocurement.entity.User;
 @Service
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
@@ -75,7 +75,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 "Approval");
 
         Role financeRole = roleRepository
-                .findByRoleName("FINANCE")
+                .findByRoleName("Finance Manager")
                 .orElseThrow(() -> new RuntimeException("Finance role not found"));
 
         User financeManager = userRepository
@@ -99,9 +99,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
 
-        // Temporary until JWT integration
-        User user = userRepository.findById(3)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        User user = getCurrentUser();
 
         PurchaseRequest purchaseRequest = new PurchaseRequest();
 
@@ -209,6 +207,10 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         PurchaseRequest request = purchaseRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
 
+        if (!"DRAFT".equals(request.getStatus())) {
+            throw new BadRequestException("Only DRAFT requests can be edited.");
+        }
+
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
 
@@ -288,7 +290,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 "Approval");
         
         Role procurementRole = roleRepository
-                .findByRoleName("PROCUREMENT")
+                .findByRoleName("Procurement Manager")
                 .orElseThrow(() -> new RuntimeException("Procurement role not found"));
 
         User procurementManager = userRepository
@@ -306,6 +308,12 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         return "PR-" +
                 LocalDateTime.now().format(
                         DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found."));
     }
 
     private PurchaseRequestResponseDTO convertToResponse(

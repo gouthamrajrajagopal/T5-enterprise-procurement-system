@@ -33,7 +33,17 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getPasswordHash(),
                 Collections.singletonList(
                         new SimpleGrantedAuthority(
-                                "ROLE_" + user.getRole().getRoleName()))
+                                "ROLE_" + normalizeRoleName(
+                                        user.getRole().getRoleName())))
         );
+    }
+
+    private String normalizeRoleName(String roleName) {
+        return switch (roleName) {
+            case "Manager" -> "MANAGER";
+            case "Finance Manager" -> "FINANCE";
+            case "Procurement Manager" -> "PROCUREMENT";
+            default -> roleName;
+        };
     }
 }
