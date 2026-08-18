@@ -1,8 +1,158 @@
-import { useEffect,useMemo,useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Add, ArrowForward } from '@mui/icons-material'
 import { requestApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { DataTable,PageHeader,SearchBar,StatusBadge } from '../components/UI'
-import { date,message,money,titleCase } from '../utils'
-export default function PurchaseRequestsPage(){const {user}=useAuth();const [rows,setRows]=useState([]),[query,setQuery]=useState(''),[status,setStatus]=useState(''),[loading,setLoading]=useState(true),[error,setError]=useState('');const load=async()=>{setLoading(true);try{setRows((await requestApi.list()).data);setError('')}catch(e){setError(message(e))}finally{setLoading(false)}};useEffect(()=>{load()},[]);const filtered=useMemo(()=>rows.filter(r=>!status||r.status===status).filter(r=>JSON.stringify(r).toLowerCase().includes(query.toLowerCase())),[rows,query,status]);const statuses=[...new Set(rows.map(r=>r.status))];return <><PageHeader title="Purchase requests" description="Track every request from draft to purchase order." action={user.role==='EMPLOYEE'&&<Link className="button primary" to="/purchase-requests/new"><Add fontSize="small"/>New request</Link>}/><div className="toolbar"><SearchBar value={query} onChange={setQuery} placeholder="Search requests…"/><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{statuses.map(s=><option key={s}>{titleCase(s)}</option>)}</select></div><section className="panel"><DataTable loading={loading} error={error} retry={load} rows={filtered} emptyTitle="No requests found" emptyDescription="Try adjusting the search or create a new purchase request." columns={[{label:'Request',render:r=><Link to={`/purchase-requests/${r.requestId}`}>{r.requestNumber}</Link>},{label:'Description',key:'description'},{label:'Department',key:'departmentName'},{label:'Requester',key:'createdBy'},{label:'Amount',render:r=>money(r.estimatedAmount)},{label:'Status',render:r=><StatusBadge status={r.status}/>},{label:'Created',render:r=>date(r.createdAt)},{label:'',render:r=><Link className="table-link" to={`/purchase-requests/${r.requestId}`}>View <ArrowForward fontSize="inherit"/></Link>}]}/></section></>}
+import {
+    DataTable,
+    PageHeader,
+    SearchBar,
+    StatusBadge
+} from '../components/UI'
+import { date, message, money, titleCase } from '../utils'
+
+export default function PurchaseRequestsPage() {
+    const { user } = useAuth()
+
+    const [rows, setRows] = useState([])
+    const [query, setQuery] = useState('')
+    const [status, setStatus] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+
+    const load = async () => {
+        setLoading(true)
+
+        try {
+            setRows((await requestApi.list()).data)
+            setError('')
+        } catch (e) {
+            setError(message(e))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        load()
+    }, [])
+
+    const filtered = useMemo(
+        () =>
+            rows
+                .filter((r) => !status || r.status === status)
+                .filter((r) =>
+                    JSON.stringify(r)
+                        .toLowerCase()
+                        .includes(query.toLowerCase())
+                ),
+        [rows, query, status]
+    )
+
+    const statuses = [...new Set(rows.map((r) => r.status))]
+
+    return (
+        <>
+            <PageHeader
+                title="Purchase requests"
+                description="Track every request from draft to purchase order."
+                action={
+                    user.role === 'EMPLOYEE' && (
+                        <Link
+                            className="button primary"
+                            to="/purchase-requests/new"
+                        >
+                            <Add fontSize="small" />
+                            New request
+                        </Link>
+                    )
+                }
+            />
+
+            <div className="toolbar">
+                <SearchBar
+                    value={query}
+                    onChange={setQuery}
+                    placeholder="Search requests…"
+                />
+
+                <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                >
+                    <option value="">All statuses</option>
+
+                    {statuses.map((s) => (
+                        <option
+                            key={s}
+                            value={s}
+                        >
+                            {titleCase(s)}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <section className="panel">
+                <DataTable
+                    loading={loading}
+                    error={error}
+                    retry={load}
+                    rows={filtered}
+                    emptyTitle="No requests found"
+                    emptyDescription="Try adjusting the search or create a new purchase request."
+                    columns={[
+                        {
+                            label: 'Request',
+                            render: (r) => (
+                                <Link
+                                    to={`/purchase-requests/${r.requestId}`}
+                                >
+                                    {r.requestNumber}
+                                </Link>
+                            )
+                        },
+                        {
+                            label: 'Description',
+                            key: 'description'
+                        },
+                        {
+                            label: 'Department',
+                            key: 'departmentName'
+                        },
+                        {
+                            label: 'Requester',
+                            key: 'createdBy'
+                        },
+                        {
+                            label: 'Amount',
+                            render: (r) => money(r.estimatedAmount)
+                        },
+                        {
+                            label: 'Status',
+                            render: (r) => (
+                                <StatusBadge status={r.status} />
+                            )
+                        },
+                        {
+                            label: 'Created',
+                            render: (r) => date(r.createdAt)
+                        },
+                        {
+                            label: '',
+                            render: (r) => (
+                                <Link
+                                    className="table-link"
+                                    to={`/purchase-requests/${r.requestId}`}
+                                >
+                                    View
+                                    <ArrowForward fontSize="inherit" />
+                                </Link>
+                            )
+                        }
+                    ]}
+                />
+            </section>
+        </>
+    )
+}
