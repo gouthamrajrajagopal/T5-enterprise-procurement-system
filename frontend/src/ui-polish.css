@@ -67,4 +67,21 @@ td:first-child a, td:first-child strong { font-weight: 700; color: #253c95; }
 .login-form input,.login-form .password-input input { height: 43px; padding: 0 11px; border: 1px solid #d8dee9; border-radius: 7px; background: #fff; font-size: inherit; }
 .login-form .password-input input { padding-right: 42px; }
 .login-form .password-input button { width: 33px; height: 33px; display: grid; place-items: center; }
+.role-dashboard { display: grid; gap: 18px; }
+.role-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 26px; border: 1px solid #dce4f4; border-radius: 12px; background: linear-gradient(115deg, #f8faff 0%, #edf1ff 100%); }
+.role-banner h2 { margin: 3px 0 7px; font-size: 22px; letter-spacing: -.35px; }
+.role-banner > div > p:last-child { color: #5d6b83; font-size: 14px; }
+.role-stats { margin-bottom: 0; }
+.analytics-panel { padding: 22px; }
+.analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.analytics-metric { min-height: 92px; display: grid; align-content: center; gap: 7px; padding: 14px; border: 1px solid #e1e7f2; border-radius: 9px; background: #f9fbff; }
+.analytics-metric span { color: #68758a; font-size: 12px; }
+.analytics-metric strong { color: #273d94; font-size: 22px; letter-spacing: -.3px; }
+.role-manager .role-banner,.role-finance .role-banner { background: linear-gradient(115deg, #fffaf0, #fff4db); border-color: #f1dfb7; }
+.role-manager .role-banner h2,.role-finance .role-banner h2 { color: #775116; }
+.role-procurement .role-banner { background: linear-gradient(115deg, #f2fbfa, #e4f5f2); border-color: #cde9e4; }
+.role-procurement .role-banner h2 { color: #17665e; }
+.role-admin .role-banner { background: linear-gradient(115deg, #f5f3ff, #eceaff); border-color: #ddd8fa; }
+.role-admin .role-banner h2 { color: #49388d; }
+@media (max-width: 760px) { .role-banner { align-items: flex-start; padding: 20px; flex-direction: column; } .role-banner .button { width: 100%; } .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .auth-card,.login-panel .login-form { padding: 24px 20px; border: 0; box-shadow: none; } }
