@@ -1,12 +1,14 @@
 package com.t5.enterpriseprocurement.service;
 
-import com.t5.enterpriseprocurement.dto.AuthResponse;
-import com.t5.enterpriseprocurement.dto.LoginRequest;
-import com.t5.enterpriseprocurement.dto.RegisterRequest;
+import com.t5.enterpriseprocurement.dto.LoginRequestDTO;
+import com.t5.enterpriseprocurement.dto.LoginResponseDTO;
+import com.t5.enterpriseprocurement.dto.RegisterRequestDTO;
+import com.t5.enterpriseprocurement.dto.RegisterResponseDTO;
 
 public interface AuthService {
 
-    AuthResponse register(RegisterRequest request);
+    RegisterResponseDTO register(RegisterRequestDTO request);
 
-    AuthResponse login(LoginRequest request);
+    LoginResponseDTO login(LoginRequestDTO request);
+
 }

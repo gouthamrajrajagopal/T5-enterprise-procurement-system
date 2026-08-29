@@ -1,362 +1,335 @@
 package com.t5.enterpriseprocurement.service.impl;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.t5.enterpriseprocurement.dto.CreatePurchaseRequestDTO;
-import com.t5.enterpriseprocurement.dto.PurchaseRequestItemDTO;
-import com.t5.enterpriseprocurement.entity.Category;
+import com.t5.enterpriseprocurement.exception.ResourceNotFoundException;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestDTO;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
 import com.t5.enterpriseprocurement.entity.Department;
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
-import com.t5.enterpriseprocurement.entity.PurchaseRequestItem;
 import com.t5.enterpriseprocurement.entity.User;
-import com.t5.enterpriseprocurement.enums.PurchaseRequestStatus;
-import com.t5.enterpriseprocurement.repository.CategoryRepository;
 import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.PurchaseRequestRepository;
 import com.t5.enterpriseprocurement.repository.UserRepository;
 import com.t5.enterpriseprocurement.service.PurchaseRequestService;
-
+import com.t5.enterpriseprocurement.entity.Supplier;
+import com.t5.enterpriseprocurement.repository.SupplierRepository;
+import com.t5.enterpriseprocurement.audit.AuditService;
+import com.t5.enterpriseprocurement.exception.BadRequestException;
+import com.t5.enterpriseprocurement.service.EmailService;
+import com.t5.enterpriseprocurement.repository.RoleRepository;
+import com.t5.enterpriseprocurement.entity.Role;
+import com.t5.enterpriseprocurement.entity.User;
 @Service
-public class PurchaseRequestServiceImpl
-        implements PurchaseRequestService {
-
-    private static final BigDecimal AUTO_APPROVAL_LIMIT =
-            new BigDecimal("10000");
-
-    private static final BigDecimal MANAGER_APPROVAL_LIMIT =
-            new BigDecimal("50000");
-
-    private static final BigDecimal FINANCE_APPROVAL_LIMIT =
-            new BigDecimal("100000");
+public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     private final PurchaseRequestRepository purchaseRequestRepository;
-    private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
-    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final SupplierRepository supplierRepository;
+    private final AuditService auditService;
+    private final EmailService emailService;
+    private final RoleRepository roleRepository;
 
     public PurchaseRequestServiceImpl(
             PurchaseRequestRepository purchaseRequestRepository,
-            UserRepository userRepository,
             DepartmentRepository departmentRepository,
-            CategoryRepository categoryRepository) {
+            UserRepository userRepository,
+            SupplierRepository supplierRepository,
+            AuditService auditService,
+            EmailService emailService,
+            RoleRepository roleRepository) {
 
         this.purchaseRequestRepository = purchaseRequestRepository;
-        this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
-        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
+        this.supplierRepository = supplierRepository;
+        this.auditService = auditService;
+        this.emailService = emailService;
+        this.roleRepository = roleRepository;
     }
 
     @Override
-    @Transactional
-    public PurchaseRequest createRequest(
-            CreatePurchaseRequestDTO request) {
+    public PurchaseRequestResponseDTO managerApprove(Integer requestId) {
 
-        User user = userRepository.findById(request.getUserId())
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new ResourceNotFoundException("Purchase Request not found"));
 
-        if (!"EMPLOYEE".equalsIgnoreCase(
-                user.getRole().getRoleName())) {
-
-            throw new RuntimeException(
-                    "Only employees can create purchase requests"
-            );
+        if (!"PENDING_MANAGER_APPROVAL".equals(request.getStatus())) {
+            throw new BadRequestException(
+                    "Request is not awaiting manager approval");
         }
 
-        Department department = departmentRepository
-                .findById(request.getDepartmentId())
-                .orElseThrow(() ->
-                        new RuntimeException("Department not found"));
+        request.setStatus("PENDING_FINANCE_APPROVAL");
+
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(request);
+
+        auditService.log(
+                request.getUser().getName(),
+                "Manager Approved Purchase Request",
+                "Approval");
+
+        Role financeRole = roleRepository
+                .findByRoleName("FINANCE")
+                .orElseThrow(() -> new RuntimeException("Finance role not found"));
+
+        User financeManager = userRepository
+                .findByRole(financeRole)
+                .orElseThrow(() -> new RuntimeException("Finance Manager not found"));
+
+        emailService.sendManagerApprovalEmail(
+                financeManager,
+                savedRequest);
+
+        return convertToResponse(savedRequest);
+    }
+    
+    @Override
+    public PurchaseRequestResponseDTO rejectRequest(Integer requestId) {
+        return null;
+    }
+    @Override
+    public PurchaseRequestResponseDTO createPurchaseRequest(PurchaseRequestDTO requestDTO) {
+
+        Department department = departmentRepository.findById(requestDTO.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
+
+        // Temporary until JWT integration
+        User user = userRepository.findById(3)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         PurchaseRequest purchaseRequest = new PurchaseRequest();
 
+        purchaseRequest.setRequestNumber(generateRequestNumber());
         purchaseRequest.setUser(user);
         purchaseRequest.setDepartment(department);
-        purchaseRequest.setPurpose(request.getPurpose());
+        purchaseRequest.setDescription(requestDTO.getDescription());
+        purchaseRequest.setQuantity(requestDTO.getQuantity());
+        purchaseRequest.setEstimatedAmount(requestDTO.getEstimatedAmount());
+        purchaseRequest.setUrgent(requestDTO.getUrgent());
 
-        purchaseRequest.setRequestNumber(
-                "PR-" + System.currentTimeMillis()
-        );
+        PurchaseRequest savedRequest =
+                purchaseRequestRepository.save(purchaseRequest);
 
-        List<PurchaseRequestItem> items = new ArrayList<>();
+        auditService.log(
+                user.getName(),
+                "Created Purchase Request",
+                "Purchase Request");
 
-        int totalQuantity = 0;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (PurchaseRequestItemDTO itemDTO : request.getItems()) {
-
-            Category category = categoryRepository
-                    .findById(itemDTO.getCategoryId())
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Category not found"
-                            ));
-
-            PurchaseRequestItem item =
-                    new PurchaseRequestItem();
-
-            item.setPurchaseRequest(purchaseRequest);
-            item.setCategory(category);
-            item.setItemName(itemDTO.getItemName());
-            item.setItemDescription(
-                    itemDTO.getItemDescription()
-            );
-            item.setQuantity(itemDTO.getQuantity());
-            item.setEstimatedPrice(
-                    itemDTO.getEstimatedPrice()
-            );
-
-            BigDecimal itemTotal =
-                    itemDTO.getEstimatedPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(
-                                            itemDTO.getQuantity()
-                                    )
-                            );
-
-            item.setTotalPrice(itemTotal);
-
-            totalQuantity += itemDTO.getQuantity();
-            totalAmount = totalAmount.add(itemTotal);
-
-            items.add(item);
-        }
-
-        purchaseRequest.setItems(items);
-        purchaseRequest.setTotalQuantity(totalQuantity);
-        purchaseRequest.setTotalAmount(totalAmount);
-
-        applyAmountBasedWorkflow(
-                purchaseRequest,
-                totalAmount
-        );
-
-        return purchaseRequestRepository.save(purchaseRequest);
+        return convertToResponse(savedRequest);
     }
-
+    
     @Override
-    public List<PurchaseRequest> getAllRequests() {
-        return purchaseRequestRepository.findAll();
-    }
+    public PurchaseRequestResponseDTO submitRequest(Integer requestId) {
 
-    @Override
-    public PurchaseRequest getRequestById(Integer requestId) {
-
-        return purchaseRequestRepository.findById(requestId)
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Purchase request not found"
-                        ));
-    }
+                        new RuntimeException("Purchase Request not found"));
 
-    @Override
-    public List<PurchaseRequest> getRequestsByUser(
-            Integer userId) {
-
-        if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found");
+        if (!"DRAFT".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Only DRAFT requests can be submitted.");
         }
 
-        return purchaseRequestRepository
-                .findByUserUserId(userId);
+        request.setStatus("PENDING_MANAGER_APPROVAL");
+
+        PurchaseRequest updatedRequest =
+                purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Submitted Purchase Request",
+                "Purchase Request");
+        
+        emailService.sendPurchaseSubmissionEmail(
+                request.getUser(),
+                updatedRequest);
+
+        return convertToResponse(updatedRequest);
     }
-
+    
     @Override
-    public List<PurchaseRequest> getPendingRequests() {
-
-        List<PurchaseRequest> pendingRequests =
-                new ArrayList<>();
-
-        pendingRequests.addAll(
-                purchaseRequestRepository.findByStatus(
-                        PurchaseRequestStatus
-                                .PENDING_MANAGER_APPROVAL
-                )
-        );
-
-        pendingRequests.addAll(
-                purchaseRequestRepository.findByStatus(
-                        PurchaseRequestStatus
-                                .PENDING_FINANCE_APPROVAL
-                )
-        );
-
-        pendingRequests.addAll(
-                purchaseRequestRepository.findByStatus(
-                        PurchaseRequestStatus
-                                .PENDING_OWNER_APPROVAL
-                )
-        );
-
-        return pendingRequests;
-    }
-
-    @Override
-    @Transactional
-    public PurchaseRequest updateRequest(
+    public PurchaseRequestResponseDTO selectSupplier(
             Integer requestId,
-            CreatePurchaseRequestDTO request) {
+            Integer supplierId) {
 
-        PurchaseRequest existing =
-                getRequestById(requestId);
-
-        if (!isEditableStatus(existing.getStatus())) {
-
-            throw new RuntimeException(
-                    "This purchase request can no longer be updated"
-            );
-        }
-
-        Department department = departmentRepository
-                .findById(request.getDepartmentId())
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
                 .orElseThrow(() ->
-                        new RuntimeException("Department not found"));
+                        new RuntimeException("Purchase Request not found"));
 
-        existing.setDepartment(department);
-        existing.setPurpose(request.getPurpose());
+        Supplier supplier = supplierRepository.findById(supplierId)
+                .orElseThrow(() ->
+                        new RuntimeException("Supplier not found"));
 
-        existing.getItems().clear();
-
-        List<PurchaseRequestItem> updatedItems =
-                new ArrayList<>();
-
-        int totalQuantity = 0;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (PurchaseRequestItemDTO itemDTO : request.getItems()) {
-
-            Category category = categoryRepository
-                    .findById(itemDTO.getCategoryId())
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Category not found"
-                            ));
-
-            PurchaseRequestItem item =
-                    new PurchaseRequestItem();
-
-            item.setPurchaseRequest(existing);
-            item.setCategory(category);
-            item.setItemName(itemDTO.getItemName());
-            item.setItemDescription(
-                    itemDTO.getItemDescription()
-            );
-            item.setQuantity(itemDTO.getQuantity());
-            item.setEstimatedPrice(
-                    itemDTO.getEstimatedPrice()
-            );
-
-            BigDecimal itemTotal =
-                    itemDTO.getEstimatedPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(
-                                            itemDTO.getQuantity()
-                                    )
-                            );
-
-            item.setTotalPrice(itemTotal);
-
-            totalQuantity += itemDTO.getQuantity();
-            totalAmount = totalAmount.add(itemTotal);
-
-            updatedItems.add(item);
+        if (!"APPROVED".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Purchase Request is not approved");
         }
 
-        existing.getItems().addAll(updatedItems);
-        existing.setTotalQuantity(totalQuantity);
-        existing.setTotalAmount(totalAmount);
+        request.setSupplier(supplier);
+        request.setStatus("VENDOR_SELECTED");
 
-        applyAmountBasedWorkflow(existing, totalAmount);
-
-        return purchaseRequestRepository.save(existing);
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Manager Approved Purchase Request",
+                "Approval");
+        return convertToResponse(updated);
     }
 
     @Override
-    public void cancelRequest(Integer requestId) {
+    public List<PurchaseRequestResponseDTO> getAllPurchaseRequests() {
 
-        PurchaseRequest purchaseRequest =
-                getRequestById(requestId);
+        return purchaseRequestRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
 
-        if (!isEditableStatus(purchaseRequest.getStatus())) {
+    @Override
+    public PurchaseRequestResponseDTO getPurchaseRequestById(Integer requestId) {
 
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
+
+        return convertToResponse(request);
+    }
+    
+
+    @Override
+    public PurchaseRequestResponseDTO updatePurchaseRequest(
+            Integer requestId,
+            PurchaseRequestDTO requestDTO) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
+
+        Department department = departmentRepository.findById(requestDTO.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found."));
+
+        request.setDepartment(department);
+        request.setDescription(requestDTO.getDescription());
+        request.setQuantity(requestDTO.getQuantity());
+        request.setEstimatedAmount(requestDTO.getEstimatedAmount());
+        request.setUrgent(requestDTO.getUrgent());
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Finance Approved Purchase Request",
+                "Approval");
+        return convertToResponse(updated);
+    }
+
+    @Override
+    public void deletePurchaseRequest(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request not found."));
+        auditService.log(
+                request.getUser().getName(),
+                "Deleted Purchase Request",
+                "Purchase Request");
+        purchaseRequestRepository.delete(request);
+    }
+    
+ 
+    @Override
+    public PurchaseRequestResponseDTO procurementApprove(Integer requestId) {
+
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
+
+        if (!"PENDING_PROCUREMENT_APPROVAL".equals(request.getStatus())) {
             throw new RuntimeException(
-                    "Only requests waiting for approval can be cancelled"
-            );
+                    "Request is not awaiting owner approval");
         }
 
-        purchaseRequest.setStatus(
-                PurchaseRequestStatus.CANCELLED
-        );
+        request.setStatus("APPROVED");
 
-        purchaseRequestRepository.save(purchaseRequest);
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Procurement Approved Purchase Request",
+                "Approval");
+        emailService.sendProcurementApprovalEmail(
+                request.getUser(),
+                updated);
+        return convertToResponse(updated);
     }
+    
+    @Override
+    public PurchaseRequestResponseDTO financeApprove(Integer requestId) {
 
-    private void applyAmountBasedWorkflow(
-            PurchaseRequest request,
-            BigDecimal totalAmount) {
+        PurchaseRequest request = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() ->
+                        new RuntimeException("Purchase Request not found"));
 
-        if (totalAmount.compareTo(AUTO_APPROVAL_LIMIT) <= 0) {
-
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .VENDOR_SELECTION_PENDING
-            );
-
-            request.setCurrentApprovalLevel(0);
-
-        } else if (
-                totalAmount.compareTo(
-                        MANAGER_APPROVAL_LIMIT
-                ) <= 0) {
-
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_MANAGER_APPROVAL
-            );
-
-            request.setCurrentApprovalLevel(1);
-
-        } else if (
-                totalAmount.compareTo(
-                        FINANCE_APPROVAL_LIMIT
-                ) <= 0) {
-
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_FINANCE_APPROVAL
-            );
-
-            request.setCurrentApprovalLevel(1);
-
-        } else {
-
-            request.setStatus(
-                    PurchaseRequestStatus
-                            .PENDING_OWNER_APPROVAL
-            );
-
-            request.setCurrentApprovalLevel(1);
+        if (!"PENDING_FINANCE_APPROVAL".equals(request.getStatus())) {
+            throw new RuntimeException(
+                    "Request is not awaiting finance approval");
         }
+
+        request.setStatus("PENDING_PROCUREMENT_APPROVAL");
+
+        PurchaseRequest updated =
+                purchaseRequestRepository.save(request);
+        auditService.log(
+                request.getUser().getName(),
+                "Finance Approved Purchase Request",
+                "Approval");
+        
+        Role procurementRole = roleRepository
+                .findByRoleName("PROCUREMENT")
+                .orElseThrow(() -> new RuntimeException("Procurement role not found"));
+
+        User procurementManager = userRepository
+                .findByRole(procurementRole)
+                .orElseThrow(() -> new RuntimeException("Procurement Manager not found"));
+
+        emailService.sendFinanceApprovalEmail(
+                procurementManager,
+                updated);
+        return convertToResponse(updated);
     }
 
-    private boolean isEditableStatus(
-            PurchaseRequestStatus status) {
+    private String generateRequestNumber() {
 
-        return status
-                == PurchaseRequestStatus
-                .PENDING_MANAGER_APPROVAL
-                ||
-                status
-                        == PurchaseRequestStatus
-                        .PENDING_FINANCE_APPROVAL
-                ||
-                status
-                        == PurchaseRequestStatus
-                        .PENDING_OWNER_APPROVAL;
+        return "PR-" +
+                LocalDateTime.now().format(
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+
+    private PurchaseRequestResponseDTO convertToResponse(
+            PurchaseRequest request) {
+
+        PurchaseRequestResponseDTO response =
+                new PurchaseRequestResponseDTO();
+
+        response.setRequestId(request.getRequestId());
+        response.setRequestNumber(request.getRequestNumber());
+        response.setDescription(request.getDescription());
+        response.setQuantity(request.getQuantity());
+        response.setEstimatedAmount(request.getEstimatedAmount());
+        response.setUrgent(request.getUrgent());
+        response.setStatus(request.getStatus());
+        response.setDepartmentName(request.getDepartment().getDeptName());
+        response.setCreatedBy(request.getUser().getName());
+        response.setCreatedAt(request.getCreatedAt());
+        
+        if (request.getSupplier() != null) {
+            response.setSupplierName(
+                    request.getSupplier().getSupplierName());
+        }
+
+        return response;
     }
 }

@@ -2,7 +2,6 @@ package com.t5.enterpriseprocurement.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.entity.Supplier;
@@ -12,8 +11,11 @@ import com.t5.enterpriseprocurement.service.SupplierService;
 @RequestMapping("/suppliers")
 public class SupplierController {
 
-    @Autowired
-    private SupplierService supplierService;
+    private final SupplierService supplierService;
+
+    SupplierController(SupplierService supplierService) {
+        this.supplierService = supplierService;
+    }
 
     @PostMapping
     public Supplier saveSupplier(@RequestBody Supplier supplier) {

@@ -2,38 +2,17 @@ package com.t5.enterpriseprocurement.dto;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 public class PurchaseRequestItemDTO {
 
-    @NotNull(message = "Category ID is required")
-    private Integer categoryId;
-
-    @NotBlank(message = "Item name is required")
     private String itemName;
 
-    private String itemDescription;
+    private String description;
 
-    @NotNull(message = "Quantity is required")
-    @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
 
-    @NotNull(message = "Estimated price is required")
-    @DecimalMin(
-            value = "0.01",
-            message = "Estimated price must be greater than zero"
-    )
-    private BigDecimal estimatedPrice;
+    private BigDecimal unitPrice;
 
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
+    public PurchaseRequestItemDTO() {
     }
 
     public String getItemName() {
@@ -44,12 +23,12 @@ public class PurchaseRequestItemDTO {
         this.itemName = itemName;
     }
 
-    public String getItemDescription() {
-        return itemDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setItemDescription(String itemDescription) {
-        this.itemDescription = itemDescription;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getQuantity() {
@@ -60,11 +39,11 @@ public class PurchaseRequestItemDTO {
         this.quantity = quantity;
     }
 
-    public BigDecimal getEstimatedPrice() {
-        return estimatedPrice;
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
     }
 
-    public void setEstimatedPrice(BigDecimal estimatedPrice) {
-        this.estimatedPrice = estimatedPrice;
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 }

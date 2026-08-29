@@ -4,16 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.t5.enterpriseprocurement.dto.AuthResponse;
-import com.t5.enterpriseprocurement.dto.LoginRequest;
-import com.t5.enterpriseprocurement.dto.RegisterRequest;
+import com.t5.enterpriseprocurement.dto.LoginRequestDTO;
+import com.t5.enterpriseprocurement.dto.LoginResponseDTO;
+import com.t5.enterpriseprocurement.dto.RegisterRequestDTO;
+import com.t5.enterpriseprocurement.dto.RegisterResponseDTO;
 import com.t5.enterpriseprocurement.service.AuthService;
 
-import jakarta.validation.Valid;
-
 @RestController
-@RequestMapping("/auth")
-@CrossOrigin("*")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -23,20 +21,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponseDTO> register(
+            @RequestBody RegisterRequestDTO request) {
+
+        RegisterResponseDTO response = authService.register(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(authService.register(request));
+                .body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponseDTO> login(
+            @RequestBody LoginRequestDTO request) {
 
-        return ResponseEntity.ok(
-                authService.login(request)
-        );
+        LoginResponseDTO response = authService.login(request);
+
+        return ResponseEntity.ok(response);
     }
 }

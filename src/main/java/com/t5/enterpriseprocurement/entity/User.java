@@ -1,7 +1,7 @@
 package com.t5.enterpriseprocurement.entity;
 
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -14,22 +14,21 @@ public class User {
     private Integer userId;
 
     @ManyToOne
-    @JoinColumn(name = "role_id")
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     @ManyToOne
-    @JoinColumn(name = "dept_id")
+    @JoinColumn(name = "dept_id", nullable = false)
     private Department department;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "email", unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @JsonIgnore
-    @Column(name = "password_hash")
-    private String password;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Column(name = "phone")
     private String phone;
@@ -40,8 +39,27 @@ public class User {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at", insertable = false)
     private LocalDateTime updatedAt;
+
+    public User() {
+    }
+
+    public User(Integer userId, Role role, Department department, String name, String email,
+            String passwordHash, String phone, String status,
+            LocalDateTime createdAt, LocalDateTime updatedAt) {
+
+        this.userId = userId;
+        this.role = role;
+        this.department = department;
+        this.name = name;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.phone = phone;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 
     public Integer getUserId() {
         return userId;
@@ -83,12 +101,12 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getPhone() {
@@ -111,7 +129,26 @@ public class User {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public String toString() {
+        return "User [userId=" + userId +
+                ", role=" + role +
+                ", department=" + department +
+                ", name=" + name +
+                ", email=" + email +
+                ", phone=" + phone +
+                ", status=" + status + "]";
     }
 }

@@ -2,7 +2,6 @@ package com.t5.enterpriseprocurement.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.entity.Department;
@@ -12,8 +11,11 @@ import com.t5.enterpriseprocurement.service.DepartmentService;
 @RequestMapping("/departments")
 public class DepartmentController {
 
-    @Autowired
-    private DepartmentService departmentService;
+    private final DepartmentService departmentService;
+
+    DepartmentController(DepartmentService departmentService) {
+        this.departmentService = departmentService;
+    }
 
     @PostMapping
     public Department saveDepartment(@RequestBody Department department) {

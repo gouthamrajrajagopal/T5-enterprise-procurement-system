@@ -1,13 +1,7 @@
 package com.t5.enterpriseprocurement.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.t5.enterpriseprocurement.enums.PurchaseOrderStatus;
 
 import jakarta.persistence.*;
 
@@ -20,46 +14,31 @@ public class PurchaseOrder {
     @Column(name = "po_id")
     private Integer poId;
 
-    @Column(name = "po_number", nullable = false, unique = true)
+    @Column(name = "po_number", unique = true, nullable = false)
     private String poNumber;
 
     @OneToOne
-    @JoinColumn(name = "request_id", nullable = false, unique = true)
+    @JoinColumn(name = "request_id", nullable = false)
     private PurchaseRequest purchaseRequest;
 
     @ManyToOne
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private PurchaseOrderStatus status;
-
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
-    @Column(name = "order_date")
-    private LocalDate orderDate;
+    @Column(name = "status")
+    private String status;
 
-    @Column(name = "expected_delivery_date")
-    private LocalDate expectedDeliveryDate;
-
-    @Column(name = "actual_delivery_date")
-    private LocalDate actualDeliveryDate;
-
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(
-            mappedBy = "purchaseOrder",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @JsonManagedReference
-    private List<PurchaseOrderItem> items = new ArrayList<>();
+    public PurchaseOrder() {
+    }
 
     public Integer getPoId() {
         return poId;
@@ -93,14 +72,6 @@ public class PurchaseOrder {
         this.supplier = supplier;
     }
 
-    public PurchaseOrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(PurchaseOrderStatus status) {
-        this.status = status;
-    }
-
     public BigDecimal getTotalAmount() {
         return totalAmount;
     }
@@ -109,43 +80,42 @@ public class PurchaseOrder {
         this.totalAmount = totalAmount;
     }
 
-    public LocalDate getOrderDate() {
-        return orderDate;
+    public String getStatus() {
+        return status;
     }
 
-    public void setOrderDate(LocalDate orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public LocalDate getExpectedDeliveryDate() {
-        return expectedDeliveryDate;
-    }
-
-    public void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
-        this.expectedDeliveryDate = expectedDeliveryDate;
-    }
-
-    public LocalDate getActualDeliveryDate() {
-        return actualDeliveryDate;
-    }
-
-    public void setActualDeliveryDate(LocalDate actualDeliveryDate) {
-        this.actualDeliveryDate = actualDeliveryDate;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public List<PurchaseOrderItem> getItems() {
-        return items;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
-    public void setItems(List<PurchaseOrderItem> items) {
-        this.items = items;
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+
+        if (status == null) {
+            status = "CREATED";
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

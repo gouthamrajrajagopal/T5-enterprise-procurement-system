@@ -5,14 +5,22 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.t5.enterpriseprocurement.entity.PurchaseRequest;
-import com.t5.enterpriseprocurement.enums.PurchaseRequestStatus;
+import com.t5.enterpriseprocurement.entity.User;
 
-public interface PurchaseRequestRepository
-        extends JpaRepository<PurchaseRequest, Integer> {
 
-    List<PurchaseRequest> findByUserUserId(Integer userId);
+public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest, Integer> {
 
-    List<PurchaseRequest> findByStatus(
-            PurchaseRequestStatus status
-    );
+    List<PurchaseRequest> findByUser(User user);
+
+    List<PurchaseRequest> findByStatus(String status);
+
+    PurchaseRequest findByRequestNumber(String requestNumber);
+
+    long countByStatusContaining(String status);
+
+    long countByStatus(String status);
+    
+    long countByDepartmentDeptId(Integer deptId);
+    
+
 }

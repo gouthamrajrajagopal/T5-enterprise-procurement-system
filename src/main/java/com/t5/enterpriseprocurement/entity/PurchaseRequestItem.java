@@ -1,8 +1,7 @@
 package com.t5.enterpriseprocurement.entity;
 
 import java.math.BigDecimal;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
@@ -17,27 +16,34 @@ public class PurchaseRequestItem {
 
     @ManyToOne
     @JoinColumn(name = "request_id", nullable = false)
-    @JsonBackReference
     private PurchaseRequest purchaseRequest;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
 
     @Column(name = "item_name", nullable = false)
     private String itemName;
 
-    @Column(name = "item_description")
-    private String itemDescription;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "estimated_price", nullable = false)
-    private BigDecimal estimatedPrice;
+    @Column(name = "unit_price", nullable = false)
+    private BigDecimal unitPrice;
 
-    @Column(name = "total_price")
+    @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    public PurchaseRequestItem() {
+    }
 
     public Integer getItemId() {
         return itemId;
@@ -55,14 +61,6 @@ public class PurchaseRequestItem {
         this.purchaseRequest = purchaseRequest;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
     public String getItemName() {
         return itemName;
     }
@@ -71,12 +69,12 @@ public class PurchaseRequestItem {
         this.itemName = itemName;
     }
 
-    public String getItemDescription() {
-        return itemDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setItemDescription(String itemDescription) {
-        this.itemDescription = itemDescription;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getQuantity() {
@@ -87,12 +85,12 @@ public class PurchaseRequestItem {
         this.quantity = quantity;
     }
 
-    public BigDecimal getEstimatedPrice() {
-        return estimatedPrice;
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
     }
 
-    public void setEstimatedPrice(BigDecimal estimatedPrice) {
-        this.estimatedPrice = estimatedPrice;
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public BigDecimal getTotalPrice() {
@@ -101,5 +99,52 @@ public class PurchaseRequestItem {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+
+        if (status == null) {
+            status = "ACTIVE";
+        }
+
+        if (totalPrice == null && quantity != null && unitPrice != null) {
+            totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+
+        if (quantity != null && unitPrice != null) {
+            totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        }
     }
 }

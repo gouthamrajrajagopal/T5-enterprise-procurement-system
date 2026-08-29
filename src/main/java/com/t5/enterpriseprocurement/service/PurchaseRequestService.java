@@ -2,25 +2,34 @@ package com.t5.enterpriseprocurement.service;
 
 import java.util.List;
 
-import com.t5.enterpriseprocurement.dto.CreatePurchaseRequestDTO;
-import com.t5.enterpriseprocurement.entity.PurchaseRequest;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestDTO;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
 
 public interface PurchaseRequestService {
 
-    PurchaseRequest createRequest(CreatePurchaseRequestDTO request);
+    PurchaseRequestResponseDTO createPurchaseRequest(PurchaseRequestDTO requestDTO);
 
-    List<PurchaseRequest> getAllRequests();
+    List<PurchaseRequestResponseDTO> getAllPurchaseRequests();
 
-    PurchaseRequest getRequestById(Integer requestId);
+    PurchaseRequestResponseDTO getPurchaseRequestById(Integer requestId);
 
-    List<PurchaseRequest> getRequestsByUser(Integer userId);
+    PurchaseRequestResponseDTO updatePurchaseRequest(Integer requestId,
+                                                     PurchaseRequestDTO requestDTO);
 
-    List<PurchaseRequest> getPendingRequests();
+    void deletePurchaseRequest(Integer requestId);
+    PurchaseRequestResponseDTO submitRequest(Integer requestId);
 
-    PurchaseRequest updateRequest(
+    PurchaseRequestResponseDTO managerApprove(Integer requestId);
+
+    PurchaseRequestResponseDTO financeApprove(Integer requestId);
+
+    PurchaseRequestResponseDTO procurementApprove(Integer requestId);
+    
+    PurchaseRequestResponseDTO selectSupplier(
             Integer requestId,
-            CreatePurchaseRequestDTO request
-    );
+            Integer supplierId);
 
-    void cancelRequest(Integer requestId);
+    PurchaseRequestResponseDTO rejectRequest(Integer requestId);
+    
+    
 }

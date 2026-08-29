@@ -2,7 +2,6 @@ package com.t5.enterpriseprocurement.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.entity.Category;
@@ -12,8 +11,11 @@ import com.t5.enterpriseprocurement.service.CategoryService;
 @RequestMapping("/categories")
 public class CategoryController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+
+    CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @PostMapping
     public Category saveCategory(@RequestBody Category category) {

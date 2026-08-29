@@ -1,86 +1,114 @@
 package com.t5.enterpriseprocurement.controller;
-
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import com.t5.enterpriseprocurement.dto.CreatePurchaseRequestDTO;
-import com.t5.enterpriseprocurement.entity.PurchaseRequest;
-import com.t5.enterpriseprocurement.service.PurchaseRequestService;
+import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import com.t5.enterpriseprocurement.dto.PurchaseRequestDTO;
+import com.t5.enterpriseprocurement.dto.PurchaseRequestResponseDTO;
+import com.t5.enterpriseprocurement.service.PurchaseRequestService;
+
 @RestController
 @RequestMapping("/purchase-requests")
-@CrossOrigin("*")
 public class PurchaseRequestController {
 
     private final PurchaseRequestService purchaseRequestService;
 
-    public PurchaseRequestController(
-            PurchaseRequestService purchaseRequestService) {
+    public PurchaseRequestController(PurchaseRequestService purchaseRequestService) {
         this.purchaseRequestService = purchaseRequestService;
     }
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping
-    public ResponseEntity<PurchaseRequest> createRequest(
-            @Valid @RequestBody
-            CreatePurchaseRequestDTO request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public PurchaseRequestResponseDTO createPurchaseRequest(
+            @Valid @RequestBody PurchaseRequestDTO requestDTO) {
+    	System.out.println("Purchase Request Controller Hit");
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        purchaseRequestService.createRequest(request)
-                );
+        return purchaseRequestService.createPurchaseRequest(requestDTO);
     }
 
     @GetMapping
-    public List<PurchaseRequest> getAllRequests() {
-        return purchaseRequestService.getAllRequests();
+    public List<PurchaseRequestResponseDTO> getAllPurchaseRequests() {
+
+        return purchaseRequestService.getAllPurchaseRequests();
     }
 
     @GetMapping("/{requestId}")
-    public PurchaseRequest getRequestById(
+    public PurchaseRequestResponseDTO getPurchaseRequestById(
             @PathVariable Integer requestId) {
 
-        return purchaseRequestService
-                .getRequestById(requestId);
-    }
-
-    @GetMapping("/user/{userId}")
-    public List<PurchaseRequest> getRequestsByUser(
-            @PathVariable Integer userId) {
-
-        return purchaseRequestService
-                .getRequestsByUser(userId);
-    }
-
-    @GetMapping("/pending")
-    public List<PurchaseRequest> getPendingRequests() {
-        return purchaseRequestService
-                .getPendingRequests();
+        return purchaseRequestService.getPurchaseRequestById(requestId);
     }
 
     @PutMapping("/{requestId}")
-    public PurchaseRequest updateRequest(
+    public PurchaseRequestResponseDTO updatePurchaseRequest(
             @PathVariable Integer requestId,
-            @Valid @RequestBody
-            CreatePurchaseRequestDTO request) {
+            @Valid @RequestBody PurchaseRequestDTO requestDTO) {
 
-        return purchaseRequestService
-                .updateRequest(requestId, request);
+        return purchaseRequestService.updatePurchaseRequest(
+                requestId,
+                requestDTO);
     }
-
-    @DeleteMapping("/{requestId}")
-    public ResponseEntity<String> cancelRequest(
+    
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PutMapping("/{requestId}/submit")
+    public ResponseEntity<PurchaseRequestResponseDTO> submitRequest(
             @PathVariable Integer requestId) {
 
-        purchaseRequestService.cancelRequest(requestId);
+        PurchaseRequestResponseDTO response =
+                purchaseRequestService.submitRequest(requestId);
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @PreAuthorize("hasRole('MANAGER')")
+    @PutMapping("/{id}/manager-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> managerApprove(
+            @PathVariable Integer id) {
 
         return ResponseEntity.ok(
-                "Purchase request cancelled successfully"
-        );
+                purchaseRequestService.managerApprove(id));
+    }
+    
+    @PreAuthorize("hasRole('FINANCE')")
+    @PutMapping("/{id}/finance-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> financeApprove(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+                purchaseRequestService.financeApprove(id));
+    }
+    
+    @PreAuthorize("hasRole('PROCUREMENT')")
+    @PutMapping("/{id}/procurement-approve")
+    public ResponseEntity<PurchaseRequestResponseDTO> procurementApprove(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+        		purchaseRequestService.procurementApprove(id));
+    }
+    
+    @PreAuthorize("hasRole('PROCUREMENT')")
+    @PutMapping("/{requestId}/select-supplier/{supplierId}")
+    public ResponseEntity<PurchaseRequestResponseDTO> selectSupplier(
+            @PathVariable Integer requestId,
+            @PathVariable Integer supplierId) {
+
+        return ResponseEntity.ok(
+                purchaseRequestService.selectSupplier(requestId, supplierId));
+    }
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{requestId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePurchaseRequest(
+            @PathVariable Integer requestId) {
+
+        purchaseRequestService.deletePurchaseRequest(requestId);
     }
 }

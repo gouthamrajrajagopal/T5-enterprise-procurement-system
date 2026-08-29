@@ -3,98 +3,106 @@ package com.t5.enterpriseprocurement.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.t5.enterpriseprocurement.dto.AuthResponse;
-import com.t5.enterpriseprocurement.dto.LoginRequest;
-import com.t5.enterpriseprocurement.dto.RegisterRequest;
-import com.t5.enterpriseprocurement.entity.Department;
-import com.t5.enterpriseprocurement.entity.Role;
-import com.t5.enterpriseprocurement.entity.User;
+import com.t5.enterpriseprocurement.dto.LoginRequestDTO;
+import com.t5.enterpriseprocurement.dto.LoginResponseDTO;
+import com.t5.enterpriseprocurement.dto.RegisterRequestDTO;
+import com.t5.enterpriseprocurement.dto.RegisterResponseDTO;
 import com.t5.enterpriseprocurement.repository.DepartmentRepository;
 import com.t5.enterpriseprocurement.repository.RoleRepository;
 import com.t5.enterpriseprocurement.repository.UserRepository;
 import com.t5.enterpriseprocurement.service.AuthService;
+import com.t5.enterpriseprocurement.entity.Department;
+import com.t5.enterpriseprocurement.entity.Role;
+import com.t5.enterpriseprocurement.entity.User;
+import com.t5.enterpriseprocurement.util.JwtUtil;
+import com.t5.enterpriseprocurement.service.EmailService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
-
+	private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil,
+            EmailService emailService) {
 
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
 
     @Override
-    public AuthResponse register(RegisterRequest request) {
+    public RegisterResponseDTO register(RegisterRequestDTO request) {
+    	if (userRepository.existsByEmail(request.getEmail())) {
+    	    throw new IllegalArgumentException("Email already exists.");
+    	}
 
-        String email = request.getEmail().trim().toLowerCase();
+    	Role role = roleRepository.findById(request.getRoleId())
+    	        .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new RuntimeException("Email already exists");
-        }
+    	Department department = departmentRepository.findById(request.getDepartmentId())
+    	        .orElseThrow(() ->
+    	                new IllegalArgumentException("Department not found."));
 
-        Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+    	User user = new User();
 
-        Department department = departmentRepository
-                .findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+    	user.setName(request.getName());
+    	user.setEmail(request.getEmail());
+    	user.setPhone(request.getPhone());
 
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setPhone(request.getPhone());
-        user.setRole(role);
-        user.setDepartment(department);
-        user.setStatus("ACTIVE");
+    	user.setRole(role);
+    	user.setDepartment(department);
 
-        User savedUser = userRepository.save(user);
+    	user.setStatus("ACTIVE");
+    	user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+    	User savedUser = userRepository.save(user);
+    	
+    	emailService.sendRegistrationEmail(savedUser);
 
-        AuthResponse response = new AuthResponse();
-        response.setUserId(savedUser.getUserId());
-        response.setName(savedUser.getName());
-        response.setRole(savedUser.getRole().getRoleName());
-        response.setMessage("Registration successful");
-
-        return response;
+    	return new RegisterResponseDTO(
+    	        savedUser.getUserId(),
+    	        savedUser.getName(),
+    	        savedUser.getEmail(),
+    	        "Registration successful."
+    	);
     }
 
     @Override
-    public AuthResponse login(LoginRequest request) {
+    public LoginResponseDTO login(LoginRequestDTO request) {
 
-        User user = userRepository
-                .findByEmailIgnoreCase(request.getEmail().trim())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid email or password"));
-
-        if (!passwordEncoder.matches(
+                        new IllegalArgumentException("Invalid email or password."));
+        boolean matches = passwordEncoder.matches(
                 request.getPassword(),
-                user.getPassword())) {
+                user.getPasswordHash());
 
-            throw new RuntimeException("Invalid email or password");
+        if (!matches) {
+            throw new IllegalArgumentException("Invalid email or password.");
         }
 
-        if (!"ACTIVE".equals(user.getStatus())) {
-            throw new RuntimeException("User account is inactive");
+        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            throw new IllegalArgumentException("User account is inactive.");
         }
 
-        AuthResponse response = new AuthResponse();
-        response.setUserId(user.getUserId());
-        response.setName(user.getName());
-        response.setRole(user.getRole().getRoleName());
-        response.setMessage("Login successful");
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        return response;
+        return new LoginResponseDTO(
+                token,
+                user.getEmail(),
+                user.getRole().getRoleName(),
+                user.getName()
+        );
     }
 }

@@ -1,24 +1,72 @@
 package com.t5.enterpriseprocurement.repository;
-
-import java.util.List;
+import java.math.BigDecimal;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.t5.enterpriseprocurement.entity.PurchaseOrder;
-import com.t5.enterpriseprocurement.enums.PurchaseOrderStatus;
 
 public interface PurchaseOrderRepository
         extends JpaRepository<PurchaseOrder, Integer> {
+	
+	@Query("SELECT COALESCE(SUM(p.totalAmount), 0) FROM PurchaseOrder p")
+	BigDecimal getTotalSpend();
 
-    Optional<PurchaseOrder>
-    findByPurchaseRequestRequestId(Integer requestId);
+    Optional<PurchaseOrder> findByPoNumber(String poNumber);
 
     boolean existsByPurchaseRequestRequestId(Integer requestId);
 
-    List<PurchaseOrder>
-    findBySupplierSupplierId(Integer supplierId);
+    
+    @Query("""
+    		SELECT COUNT(po)
+    		FROM PurchaseOrder po
+    		WHERE po.supplier.supplierId = :supplierId
+    		""")
+    		Long countBySupplier(@Param("supplierId") Integer supplierId);
+    
+    @Query("""
+    		SELECT COALESCE(SUM(po.totalAmount),0)
+    		FROM PurchaseOrder po
+    		WHERE po.supplier.supplierId = :supplierId
+    		""")
+    		BigDecimal getSupplierBusiness(@Param("supplierId") Integer supplierId);
+    
+    @Query("""
+    		SELECT COUNT(po)
+    		FROM PurchaseOrder po
+    		WHERE FUNCTION('YEAR', po.createdAt) = :year
+    		AND FUNCTION('MONTH', po.createdAt) = :month
+    		""")
+    		Long countMonthlyPurchaseOrders(
+    		        @Param("year") int year,
+    		        @Param("month") int month);
+    
+    @Query("""
+    		SELECT COALESCE(SUM(po.totalAmount),0)
+    		FROM PurchaseOrder po
+    		WHERE FUNCTION('YEAR', po.createdAt) = :year
+    		AND FUNCTION('MONTH', po.createdAt) = :month
+    		""")
+    		BigDecimal getMonthlySpend(
+    		        @Param("year") int year,
+    		        @Param("month") int month);
+    
+    @Query("""
+    		SELECT COUNT(po)
+    		FROM PurchaseOrder po
+    		WHERE po.purchaseRequest.department.deptId = :deptId
+    		""")
+    		Long countPurchaseOrdersByDepartment(
+    		        @Param("deptId") Integer deptId);
+    
+    @Query("""
+    		SELECT COALESCE(SUM(po.totalAmount),0)
+    		FROM PurchaseOrder po
+    		WHERE po.purchaseRequest.department.deptId = :deptId
+    		""")
+    		BigDecimal getDepartmentSpend(
+    		        @Param("deptId") Integer deptId);
 
-    List<PurchaseOrder>
-    findByStatus(PurchaseOrderStatus status);
 }

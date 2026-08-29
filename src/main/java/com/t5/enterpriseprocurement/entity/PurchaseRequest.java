@@ -2,11 +2,6 @@ package com.t5.enterpriseprocurement.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.t5.enterpriseprocurement.enums.PurchaseRequestStatus;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 
@@ -19,7 +14,7 @@ public class PurchaseRequest {
     @Column(name = "request_id")
     private Integer requestId;
 
-    @Column(name = "request_number", unique = true)
+    @Column(name = "request_number", nullable = false, unique = true)
     private String requestNumber;
 
     @ManyToOne
@@ -27,42 +22,36 @@ public class PurchaseRequest {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "department_id", nullable = false)
+    @JoinColumn(name = "dept_id", nullable = false)
     private Department department;
-
-    @Column(name = "purpose")
-    private String purpose;
-
-    @Column(name = "total_quantity")
-    private Integer totalQuantity;
-
-    @Column(name = "total_amount")
-    private BigDecimal totalAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PurchaseRequestStatus status;
-
-    @Column(name = "current_approval_level")
-    private Integer currentApprovalLevel;
-
-    @Column(name = "created_date", insertable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
-
-    @OneToMany(
-            mappedBy = "purchaseRequest",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @JsonManagedReference
-    private List<PurchaseRequestItem> items = new ArrayList<>();
-
+    
     @ManyToOne
     @JoinColumn(name = "selected_supplier_id")
-    private Supplier selectedSupplier;
+    private Supplier supplier;
+
+    @Column(name = "description", nullable = false)
+    private String description;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
+
+    @Column(name = "estimated_amount", nullable = false)
+    private BigDecimal estimatedAmount;
+
+    @Column(name = "is_urgent")
+    private Boolean urgent;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    public PurchaseRequest() {
+    }
 
     public Integer getRequestId() {
         return requestId;
@@ -96,67 +85,86 @@ public class PurchaseRequest {
         this.department = department;
     }
 
-    public String getPurpose() {
-        return purpose;
+    public String getDescription() {
+        return description;
     }
 
-    public void setPurpose(String purpose) {
-        this.purpose = purpose;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Integer getTotalQuantity() {
-        return totalQuantity;
+    public Integer getQuantity() {
+        return quantity;
     }
 
-    public void setTotalQuantity(Integer totalQuantity) {
-        this.totalQuantity = totalQuantity;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public BigDecimal getEstimatedAmount() {
+        return estimatedAmount;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setEstimatedAmount(BigDecimal estimatedAmount) {
+        this.estimatedAmount = estimatedAmount;
     }
 
-    public PurchaseRequestStatus getStatus() {
+    public Boolean getUrgent() {
+        return urgent;
+    }
+
+    public void setUrgent(Boolean urgent) {
+        this.urgent = urgent;
+    }
+
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(PurchaseRequestStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
-    public Integer getCurrentApprovalLevel() {
-        return currentApprovalLevel;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCurrentApprovalLevel(Integer currentApprovalLevel) {
-        this.currentApprovalLevel = currentApprovalLevel;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public List<PurchaseRequestItem> getItems() {
-        return items;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
+    public Supplier getSupplier() {
+        return supplier;
     }
 
-    public void setItems(List<PurchaseRequestItem> items) {
-        this.items = items;
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
     }
 
-    public Supplier getSelectedSupplier() {
-        return selectedSupplier;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+
+        if (status == null) {
+            status = "DRAFT";
+        }
+
+        if (urgent == null) {
+            urgent = false;
+        }
     }
 
-    public void setSelectedSupplier(Supplier selectedSupplier) {
-        this.selectedSupplier = selectedSupplier;
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
