@@ -14,6 +14,15 @@ public interface PurchaseOrderRepository
 	@Query("SELECT COALESCE(SUM(p.totalAmount), 0) FROM PurchaseOrder p")
 	BigDecimal getTotalSpend();
 
+    @Query("SELECT AVG(p.totalAmount) FROM PurchaseOrder p")
+    BigDecimal getAverageSpend();
+
+    @Query("SELECT MAX(p.totalAmount) FROM PurchaseOrder p")
+    BigDecimal getHighestSpend();
+
+    @Query("SELECT MIN(p.totalAmount) FROM PurchaseOrder p")
+    BigDecimal getLowestSpend();
+
     Optional<PurchaseOrder> findByPoNumber(String poNumber);
 
     boolean existsByPurchaseRequestRequestId(Integer requestId);

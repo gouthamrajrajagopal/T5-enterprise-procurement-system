@@ -8,6 +8,9 @@ import com.t5.enterpriseprocurement.dto.LoginRequestDTO;
 import com.t5.enterpriseprocurement.dto.LoginResponseDTO;
 import com.t5.enterpriseprocurement.dto.RegisterRequestDTO;
 import com.t5.enterpriseprocurement.dto.RegisterResponseDTO;
+import com.t5.enterpriseprocurement.dto.ForgotPasswordRequestDTO;
+import com.t5.enterpriseprocurement.dto.ForgotPasswordResponseDTO;
+import com.t5.enterpriseprocurement.dto.ResetPasswordRequestDTO;
 import com.t5.enterpriseprocurement.service.AuthService;
 
 @RestController
@@ -38,5 +41,16 @@ public class AuthController {
         LoginResponseDTO response = authService.login(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponseDTO> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
     }
 }

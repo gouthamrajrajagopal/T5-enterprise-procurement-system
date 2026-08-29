@@ -3,6 +3,7 @@ package com.t5.enterpriseprocurement.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.t5.enterpriseprocurement.dto.PurchaseRequestItemDTO;
@@ -25,6 +26,7 @@ public class PurchaseRequestItemController {
      * Create Item
      */
     @PostMapping
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @ResponseStatus(HttpStatus.CREATED)
     public PurchaseRequestItemResponseDTO createItem(
             @PathVariable Integer requestId,
@@ -47,6 +49,7 @@ public class PurchaseRequestItemController {
      * Update Item
      */
     @PutMapping("/{itemId}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
     public PurchaseRequestItemResponseDTO updateItem(
             @PathVariable Integer itemId,
             @RequestBody PurchaseRequestItemDTO dto) {
@@ -58,6 +61,7 @@ public class PurchaseRequestItemController {
      * Delete Item
      */
     @DeleteMapping("/{itemId}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteItem(
             @PathVariable Integer itemId) {

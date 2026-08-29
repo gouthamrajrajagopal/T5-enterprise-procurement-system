@@ -2,6 +2,7 @@ package com.t5.enterpriseprocurement.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PurchaseOrderResponseDTO {
 
@@ -11,6 +12,12 @@ public class PurchaseOrderResponseDTO {
 
     private String requestNumber;
 
+    private Integer requestId;
+
+    private Integer supplierId;
+
+    private String departmentName;
+
     private String supplierName;
 
     private BigDecimal totalAmount;
@@ -18,6 +25,8 @@ public class PurchaseOrderResponseDTO {
     private String status;
 
     private LocalDateTime createdAt;
+
+    private List<PurchaseRequestItemResponseDTO> items;
 
     public PurchaseOrderResponseDTO() {
     }
@@ -45,6 +54,15 @@ public class PurchaseOrderResponseDTO {
     public void setRequestNumber(String requestNumber) {
         this.requestNumber = requestNumber;
     }
+
+    public Integer getRequestId() { return requestId; }
+    public void setRequestId(Integer requestId) { this.requestId = requestId; }
+
+    public Integer getSupplierId() { return supplierId; }
+    public void setSupplierId(Integer supplierId) { this.supplierId = supplierId; }
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
 
     public String getSupplierName() {
         return supplierName;
@@ -77,4 +95,7 @@ public class PurchaseOrderResponseDTO {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public List<PurchaseRequestItemResponseDTO> getItems() { return items; }
+    public void setItems(List<PurchaseRequestItemResponseDTO> items) { this.items = items; }
 }
